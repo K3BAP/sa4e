@@ -1,0 +1,23 @@
+// Fabian Sponholz (1561546)
+plugins {
+    id 'java'
+    id 'application'
+    id 'org.openjfx.javafxplugin' version '0.0.8'
+}
+
+repositories{
+    mavenCentral()
+}
+
+javafx {
+    version = '11.0.2'
+    modules = ['javafx.controls']
+}
+
+application {
+    mainClass = 'sa4e.firefly.threads.Main'
+}
+
+dependencies {
+
+}
