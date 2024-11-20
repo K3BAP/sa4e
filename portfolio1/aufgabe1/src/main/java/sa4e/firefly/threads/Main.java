@@ -1,5 +1,9 @@
 package sa4e.firefly.threads;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.layout.GridPane;
@@ -14,7 +18,8 @@ public class Main extends Application {
     private static final double SQUARE_SIZE = 50.0; // Size of each square
 
     // Two-dimensional array to store the squares
-    private Rectangle[][] squares = new Rectangle[N][M];
+    private Firefly[][] fireflies = new Firefly[N][M];
+    private List<Thread> fireflyThreads = new ArrayList<Thread>(N*M);
 
     @Override
     public void start(Stage primaryStage) {
@@ -26,10 +31,12 @@ public class Main extends Application {
         // Initialize the grid with white rectangles
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < M; j++) {
-                Firefly firefly = new Firefly(SQUARE_SIZE, SQUARE_SIZE, Color.WHITE);
-                squares[i][j] = firefly;
+                Firefly firefly = new Firefly(SQUARE_SIZE, SQUARE_SIZE);
+                fireflies[i][j] = firefly;
                 gridPane.add(firefly, j, i);
-                new Thread(firefly).start();
+                Thread thisFireflyThread = new Thread(firefly);
+                thisFireflyThread.start();
+                fireflyThreads.add(thisFireflyThread);
             }
         }
 
@@ -37,6 +44,9 @@ public class Main extends Application {
         Scene scene = new Scene(gridPane, M * SQUARE_SIZE, N * SQUARE_SIZE);
         primaryStage.setScene(scene);
         primaryStage.show();
+        primaryStage.setOnCloseRequest((event) -> {
+            fireflyThreads.forEach(Thread::interrupt);
+        });
     }
 
     public static void main(String[] args) {

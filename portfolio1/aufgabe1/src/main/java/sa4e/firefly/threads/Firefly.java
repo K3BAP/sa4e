@@ -7,18 +7,36 @@ import javafx.scene.shape.Rectangle;
 
 public class Firefly extends Rectangle implements Runnable {
 
-    public Firefly(double width, double height, Paint fill) {
-        super(width, height, fill);
+    private final int phaseLength = 10;
+    private final int clockLength = 100;
+
+    private boolean pulsing = (Math.random() < 0.5);
+    private int currentPhase = (int) (Math.random() * phaseLength);
+
+    public Firefly(double width, double height) {
+        super(width, height, Color.WHITE);
+
+        updateColor(pulsing ? Color.YELLOW : Color.BLACK);
     }
 
     @Override
     public void run() {
         try {
             while(!Thread.interrupted()) {
-                updateColor(Color.YELLOW);
-                Thread.sleep(1000);
-                updateColor(Color.WHITE);
-                Thread.sleep(1000);
+                Thread.sleep(clockLength);
+
+                if (currentPhase++ > phaseLength) {
+                    currentPhase = 0;
+                    pulsing = !pulsing;
+
+                    if (pulsing) {
+                        updateColor(Color.YELLOW);
+                    }
+                    else {
+                        updateColor(Color.BLACK);
+                    }
+                }
+
             }
         }
         catch (InterruptedException ex) {}
