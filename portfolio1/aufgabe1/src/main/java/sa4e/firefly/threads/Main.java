@@ -1,14 +1,11 @@
 package sa4e.firefly.threads;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.layout.GridPane;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 
 public class Main extends Application {
@@ -16,6 +13,8 @@ public class Main extends Application {
     private static final int N = 5; // Number of rows
     private static final int M = 5; // Number of columns
     private static final double SQUARE_SIZE = 50.0; // Size of each square
+
+    private static final Topology topology = new TorusTopology();
 
     // Two-dimensional array to store the squares
     private Firefly[][] fireflies = new Firefly[N][M];
@@ -37,6 +36,12 @@ public class Main extends Application {
                 Thread thisFireflyThread = new Thread(firefly);
                 thisFireflyThread.start();
                 fireflyThreads.add(thisFireflyThread);
+            }
+        }
+
+        for (int i = 0; i < N; i++) {
+            for (int j = 0; j < M; j++) {
+                fireflies[i][j].getNeighbors().addAll(topology.getNeighbours(fireflies, i, j));
             }
         }
 
