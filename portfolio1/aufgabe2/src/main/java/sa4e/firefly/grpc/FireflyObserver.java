@@ -11,8 +11,8 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
+import sa4e.firefly.grpc.observer.FireflyGrid;
 
 public class FireflyObserver extends Application {
 
@@ -27,19 +27,9 @@ public class FireflyObserver extends Application {
         BorderPane root = new BorderPane();
 
         // Create a GridPane to hold the squares
-        GridPane squaresPane = new GridPane();
+        GridPane fireflyGrid = new FireflyGrid();
 
-        // Populate the grid with rectangles
-        for (int i = 0; i < N; i++) {
-            for (int j = 0; j < M; j++) {
-                Rectangle square = new Rectangle(SQUARE_SIZE, SQUARE_SIZE);
-                square.setFill(Color.WHITE); // Initial color
-                square.setStroke(Color.BLACK); // Border color
-                squaresPane.add(square, j, i);
-            }
-        }
-
-        squaresPane.setAlignment(Pos.CENTER);
+        fireflyGrid.setAlignment(Pos.CENTER);
 
         HBox toolbar = new HBox();
         toolbar.setPadding(new Insets(15, 12, 15, 12));
@@ -52,7 +42,7 @@ public class FireflyObserver extends Application {
 
 
         root.setTop(toolbar);
-        root.setCenter(squaresPane);
+        root.setCenter(fireflyGrid);
 
         root.setBackground(new Background(new BackgroundFill(Color.BLACK, null, null)));
 
