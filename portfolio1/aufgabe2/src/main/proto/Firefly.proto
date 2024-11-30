@@ -9,6 +9,7 @@ service FireflyService {
 
 message FireflyRequest {
   bool isflashing = 1;
+  int32 port = 2;
 }
 
 message FireflyReply {

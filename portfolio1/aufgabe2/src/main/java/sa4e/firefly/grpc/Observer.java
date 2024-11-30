@@ -11,7 +11,7 @@ public class Observer implements FireflyCallable{
     }
 
     @Override
-    public void flashStatusChanged(boolean isFlashing) {
-        System.out.println("Flash status: " + isFlashing);
+    public void flashStatusChanged(boolean isFlashing, int port) {
+        System.out.printf("[%d]: %s\n", port, (isFlashing ? "FLASH" : "-----"));
     }
 }

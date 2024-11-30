@@ -20,7 +20,7 @@ public class FireflyServer {
 
     public void init(FireflyCallable callback) throws IOException, InterruptedException {
         server = ServerBuilder.forPort(port)
-                                     .addService(new FireflyServiceImpl(callback))
+                                     .addService(new FireflyServiceImpl(callback, port))
                                      .build();
 
         System.out.println("Starting server...");
@@ -36,15 +36,18 @@ public class FireflyServer {
 
     static class FireflyServiceImpl extends FireflyServiceGrpc.FireflyServiceImplBase {
         private FireflyCallable callback;
-        public FireflyServiceImpl(FireflyCallable callback) {
+        int port;
+        public FireflyServiceImpl(FireflyCallable callback, int port) {
             super();
             this.callback = callback;
+            this.port = port;
         }
 
         @Override
         public void notifyFirefly(FireflyRequest request, StreamObserver<FireflyReply> responseObserver) {
             Boolean isFlashing = request.getIsflashing();
-            callback.flashStatusChanged(isFlashing);
+            Integer remotePort = request.getPort();
+            callback.flashStatusChanged(isFlashing, remotePort);
 
             FireflyReply reply = FireflyReply.newBuilder()
                                          .setReceived(true)

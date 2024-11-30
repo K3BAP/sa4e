@@ -42,7 +42,7 @@ public class Firefly implements Runnable, FireflyCallable {
     public Firefly(int port, int neighborPorts[]) {
         this.fireflyServer = new FireflyServer(port);
         for (int i = 0; i < neighborPorts.length; i++) {
-            this.neighbors.add(new FireflyClient(neighborPorts[i]));
+            this.neighbors.add(new FireflyClient(neighborPorts[i], port));
         }
     }
 
@@ -78,7 +78,7 @@ public class Firefly implements Runnable, FireflyCallable {
     }
 
     @Override
-    public void flashStatusChanged(boolean isFlashing) {
+    public void flashStatusChanged(boolean isFlashing, int port) {
         if (isFlashing != this.pulsing) {
             currentPhase += coupling;
         }

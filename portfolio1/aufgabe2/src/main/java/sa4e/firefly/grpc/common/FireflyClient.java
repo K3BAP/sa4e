@@ -9,21 +9,23 @@ import sa4e.firefly.grpc.FireflyServiceGrpc;
 public class FireflyClient {// Create a channel to the gRPC server
     ManagedChannel channel;
     FireflyServiceGrpc.FireflyServiceBlockingStub stub;
-    int port;
+    int serverPort;
+    int thisPort;
 
-    public FireflyClient(int port) {
-        this.port = port;
+    public FireflyClient(int port, int thisPort) {
+        this.serverPort = port;
+        this.thisPort = thisPort;
     }
 
     public void init() {
-        this.channel = ManagedChannelBuilder.forAddress("localhost", port)
+        this.channel = ManagedChannelBuilder.forAddress("localhost", serverPort)
                                                     .usePlaintext() // Disable TLS for local testing
                                                     .build();
 
         // Create a stub for calling the service
         this.stub = FireflyServiceGrpc.newBlockingStub(channel);
 
-        System.out.println("Client for port " + port + " is initialized.");
+        System.out.println("Client for port " + serverPort + " is initialized.");
     }
 
     public void notifyFirefly(boolean isFlashing) {
@@ -31,13 +33,14 @@ public class FireflyClient {// Create a channel to the gRPC server
             // Create a request
             FireflyRequest request = FireflyRequest.newBuilder()
             .setIsflashing(isFlashing)
+            .setPort(thisPort)
             .build();
 
             // Call the remote procedure
             FireflyReply response = stub.notifyFirefly(request);
         }
         catch (Exception ex) {
-            System.out.println("Message could not be delivered to port " + port);
+            System.out.println("Message could not be delivered to port " + serverPort);
         }
 
     }
