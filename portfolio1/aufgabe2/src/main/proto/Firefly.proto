@@ -3,14 +3,14 @@ syntax = "proto3";
 option java_package = "sa4e.firefly.grpc";
 option java_outer_classname = "FireflyProto";
 
-service Greeter {
-  rpc SayHello (HelloRequest) returns (HelloReply);
+service FireflyService {
+  rpc SayHello (FireflyRequest) returns (FireflyReply);
 }
 
-message HelloRequest {
+message FireflyRequest {
   string name = 1;
 }
 
-message HelloReply {
+message FireflyReply {
   string message = 1;
 }

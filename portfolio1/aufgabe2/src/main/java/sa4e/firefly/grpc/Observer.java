@@ -4,13 +4,13 @@ import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
 
-import sa4e.firefly.grpc.FireflyProto.HelloRequest;
-import sa4e.firefly.grpc.FireflyProto.HelloReply;
+import sa4e.firefly.grpc.FireflyProto.FireflyRequest;
+import sa4e.firefly.grpc.FireflyProto.FireflyReply;
 
 public class Observer {
     public static void main(String[] args) throws Exception {
         Server server = ServerBuilder.forPort(50051)
-                                     .addService(new GreeterImpl())
+                                     .addService(new FireflyServiceImpl())
                                      .build();
 
         System.out.println("Starting server...");
@@ -20,13 +20,13 @@ public class Observer {
         server.awaitTermination();
     }
 
-    static class GreeterImpl extends GreeterGrpc.GreeterImplBase {
+    static class FireflyServiceImpl extends FireflyServiceGrpc.FireflyServiceImplBase {
         @Override
-        public void sayHello(HelloRequest request, StreamObserver<HelloReply> responseObserver) {
+        public void sayHello(FireflyRequest request, StreamObserver<FireflyReply> responseObserver) {
             String name = request.getName();
             String message = "Hello, " + name + "!";
 
-            HelloReply reply = HelloReply.newBuilder()
+            FireflyReply reply = FireflyReply.newBuilder()
                                          .setMessage(message)
                                          .build();
 

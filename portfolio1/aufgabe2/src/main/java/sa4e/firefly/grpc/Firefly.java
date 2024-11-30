@@ -3,8 +3,8 @@ package sa4e.firefly.grpc;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 
-import sa4e.firefly.grpc.FireflyProto.HelloRequest;
-import sa4e.firefly.grpc.FireflyProto.HelloReply;
+import sa4e.firefly.grpc.FireflyProto.FireflyRequest;
+import sa4e.firefly.grpc.FireflyProto.FireflyReply;
 
 
 public class Firefly {
@@ -15,15 +15,15 @@ public class Firefly {
                                                       .build();
 
         // Create a stub for calling the service
-        GreeterGrpc.GreeterBlockingStub stub = GreeterGrpc.newBlockingStub(channel);
+        FireflyServiceGrpc.FireflyServiceBlockingStub stub = FireflyServiceGrpc.newBlockingStub(channel);
 
         // Create a request
-        HelloRequest request = HelloRequest.newBuilder()
+        FireflyRequest request = FireflyRequest.newBuilder()
                                            .setName("World")
                                            .build();
 
         // Call the remote procedure
-        HelloReply response = stub.sayHello(request);
+        FireflyReply response = stub.sayHello(request);
 
         // Print the response
         System.out.println("Response from server: " + response.getMessage());
