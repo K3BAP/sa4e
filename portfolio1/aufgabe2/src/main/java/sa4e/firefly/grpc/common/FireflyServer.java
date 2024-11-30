@@ -12,9 +12,14 @@ import sa4e.firefly.grpc.FireflyProto.FireflyReply;
 import sa4e.firefly.grpc.*;
 
 public class FireflyServer {
+    private Server server;
+    private int port;
+    public FireflyServer(int port) {
+        this.port = port;
+    }
 
     public void init(FireflyCallable callback) throws IOException, InterruptedException {
-        Server server = ServerBuilder.forPort(50051)
+        server = ServerBuilder.forPort(port)
                                      .addService(new FireflyServiceImpl(callback))
                                      .build();
 
@@ -22,7 +27,11 @@ public class FireflyServer {
         server.start();
         System.out.println("Server started on port 50051");
 
-        server.awaitTermination();
+        //server.awaitTermination();
+    }
+
+    public void awaitTermination() throws InterruptedException {
+        this.server.awaitTermination();
     }
 
     static class FireflyServiceImpl extends FireflyServiceGrpc.FireflyServiceImplBase {
@@ -36,7 +45,7 @@ public class FireflyServer {
         public void notifyFirefly(FireflyRequest request, StreamObserver<FireflyReply> responseObserver) {
             Boolean isFlashing = request.getIsflashing();
             callback.flashStatusChanged(isFlashing);
-            
+
             FireflyReply reply = FireflyReply.newBuilder()
                                          .setReceived(true)
                                          .build();

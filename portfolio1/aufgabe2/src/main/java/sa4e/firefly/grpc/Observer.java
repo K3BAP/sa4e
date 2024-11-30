@@ -5,8 +5,9 @@ import sa4e.firefly.grpc.common.FireflyServer;
 
 public class Observer implements FireflyCallable{
     public static void main(String[] args) throws Exception {
-        FireflyServer server = new FireflyServer();
+        FireflyServer server = new FireflyServer(50051);
         server.init(new Observer());
+        server.awaitTermination();
     }
 
     @Override
