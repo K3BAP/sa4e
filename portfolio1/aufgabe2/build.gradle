@@ -54,6 +54,6 @@ tasks.register('runFirefly', JavaExec) {
 tasks.register('runObserver', JavaExec) {
     group = 'application'
     description = 'Run the server application'
-    mainClass = 'sa4e.firefly.grpc.Observer'
+    mainClass = 'sa4e.firefly.grpc.FireflyObserver'
     classpath = sourceSets.main.runtimeClasspath
 }
