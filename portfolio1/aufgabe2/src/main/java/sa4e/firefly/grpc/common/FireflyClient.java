@@ -3,7 +3,6 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 
 import sa4e.firefly.grpc.FireflyProto.FireflyRequest;
-import sa4e.firefly.grpc.FireflyProto.FireflyReply;
 import sa4e.firefly.grpc.FireflyServiceGrpc;
 
 public class FireflyClient {// Create a channel to the gRPC server
@@ -37,7 +36,7 @@ public class FireflyClient {// Create a channel to the gRPC server
             .build();
 
             // Call the remote procedure
-            FireflyReply response = stub.notifyFirefly(request);
+            stub.notifyFirefly(request);
         }
         catch (Exception ex) {
             System.out.println("Message could not be delivered to port " + serverPort);
