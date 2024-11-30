@@ -21,6 +21,8 @@ public class FireflyObserver extends Application {
     private static final int M = 5; // Number of columns
     public static final double SQUARE_SIZE = 50.0; // Size of each square
 
+    private static int port = 50051;
+
     @Override
     public void start(Stage primaryStage) {
         primaryStage.setTitle("Firefly Visualization");
@@ -28,7 +30,7 @@ public class FireflyObserver extends Application {
         BorderPane root = new BorderPane();
 
         // Create a GridPane to hold the squares
-        FireflyGrid fireflyGrid = new FireflyGrid(50051);
+        FireflyGrid fireflyGrid = new FireflyGrid(port);
 
         fireflyGrid.setAlignment(Pos.CENTER);
 
@@ -63,6 +65,7 @@ public class FireflyObserver extends Application {
 
 
     public static void main(String[] args) {
+        if (args.length == 1) port = Integer.parseInt(args[0]);
         launch(args);
     }
 }
