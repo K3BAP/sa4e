@@ -2,10 +2,16 @@ plugins {
     id 'java'
     id 'application'
     id 'com.google.protobuf' version '0.9.3'
+    id 'org.openjfx.javafxplugin' version '0.0.8'
 }
 
 repositories {
     mavenCentral()
+}
+
+javafx {
+    version = '11.0.2'
+    modules = ['javafx.controls']
 }
 
 dependencies {
@@ -40,9 +46,9 @@ java {
     }
 }
 
-// application {
-//     mainClass = 'sa4e.firefly.grpc.Firefly'
-// }
+application {
+    mainClass = 'sa4e.firefly.grpc.FireflyObserver'
+}
 
 tasks.register('runFirefly', JavaExec) {
     group = 'application'
@@ -51,9 +57,8 @@ tasks.register('runFirefly', JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
 }
 
-tasks.register('runObserver', JavaExec) {
+tasks.register('runObserver') {
+    dependsOn 'run'
     group = 'application'
     description = 'Run the server application'
-    mainClass = 'sa4e.firefly.grpc.FireflyObserver'
-    classpath = sourceSets.main.runtimeClasspath
 }
