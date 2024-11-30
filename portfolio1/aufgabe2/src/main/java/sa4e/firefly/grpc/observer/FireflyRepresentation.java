@@ -17,4 +17,8 @@ public class FireflyRepresentation extends Rectangle {
     public int getPort() {
         return this.port;
     }
+
+    public void setIsFlashing(boolean isFlashing) {
+        setFill(isFlashing ? Color.YELLOW : Color.DARKBLUE);
+    }
 }

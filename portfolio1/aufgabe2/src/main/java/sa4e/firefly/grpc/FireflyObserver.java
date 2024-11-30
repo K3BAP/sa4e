@@ -1,5 +1,7 @@
 package sa4e.firefly.grpc;
 
+import java.io.IOException;
+
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -8,7 +10,6 @@ import javafx.scene.control.Button;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
@@ -27,7 +28,7 @@ public class FireflyObserver extends Application {
         BorderPane root = new BorderPane();
 
         // Create a GridPane to hold the squares
-        GridPane fireflyGrid = new FireflyGrid();
+        FireflyGrid fireflyGrid = new FireflyGrid(50051);
 
         fireflyGrid.setAlignment(Pos.CENTER);
 
@@ -50,6 +51,13 @@ public class FireflyObserver extends Application {
         Scene scene = new Scene(root, M * SQUARE_SIZE, N * SQUARE_SIZE + 100);
         primaryStage.setScene(scene);
         primaryStage.show();
+
+        try {
+            fireflyGrid.startListening();
+        } catch (IOException | InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
 

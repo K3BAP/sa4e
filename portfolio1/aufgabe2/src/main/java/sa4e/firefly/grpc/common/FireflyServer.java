@@ -23,9 +23,9 @@ public class FireflyServer {
                                      .addService(new FireflyServiceImpl(callback, port))
                                      .build();
 
-        System.out.println("Starting server...");
+        System.out.println("Starting firefly server...");
         server.start();
-        System.out.println("Server started on port 50051");
+        System.out.println("Server listening on port " + port);
 
         //server.awaitTermination();
     }
