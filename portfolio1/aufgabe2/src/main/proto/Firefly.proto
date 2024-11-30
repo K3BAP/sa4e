@@ -4,13 +4,13 @@ option java_package = "sa4e.firefly.grpc";
 option java_outer_classname = "FireflyProto";
 
 service FireflyService {
-  rpc SayHello (FireflyRequest) returns (FireflyReply);
+  rpc notifyFirefly (FireflyRequest) returns (FireflyReply);
 }
 
 message FireflyRequest {
-  string name = 1;
+  bool isflashing = 1;
 }
 
 message FireflyReply {
-  string message = 1;
+  bool received = 1;
 }
