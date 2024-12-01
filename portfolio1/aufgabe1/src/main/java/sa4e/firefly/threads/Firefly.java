@@ -11,7 +11,7 @@ import javafx.scene.shape.Rectangle;
 public class Firefly extends Rectangle implements Runnable {
 
     private final int clockLength = 10;
-    private final double adherence = 0.1;
+    private final double coupling = 0.13;
 
     private boolean pulsing = (Math.random() < 0.5);
     private double currentPhase = Math.random();
@@ -64,7 +64,7 @@ public class Firefly extends Rectangle implements Runnable {
 
     public void iAmFlashing(boolean flash) {
         if (flash != this.pulsing) {
-            currentPhase += adherence;
+            currentPhase += coupling;
         }
     }
 
