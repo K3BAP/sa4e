@@ -46,6 +46,18 @@ java {
     }
 }
 
+jar {
+    manifest {
+        attributes(
+                'Main-Class': 'sa4e.firefly.grpc.Firefly'
+        )
+    }
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    duplicatesStrategy = DuplicatesStrategy.WARN
+ }
+
 application {
     mainClass = 'sa4e.firefly.grpc.FireflyObserver'
 }
@@ -55,4 +67,16 @@ tasks.register('runFirefly', JavaExec) {
     description = 'Run the client application'
     mainClass = 'sa4e.firefly.grpc.Firefly'
     classpath = sourceSets.main.runtimeClasspath
+}
+
+tasks.register("runObserver") {
+    group = "application"
+    description = "Builds the jar and runs the application."
+
+    dependsOn("jar") // Ensure the jar task runs first
+    finalizedBy("run") // Ensure the run task executes after jar
+
+    doLast {
+        println("The application has been built and is running.")
+    }
 }

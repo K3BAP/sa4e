@@ -14,6 +14,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import sa4e.firefly.grpc.observer.FireflyGrid;
+import sa4e.firefly.grpc.observer.ProcessManager;
 
 public class FireflyObserver extends Application {
 
@@ -39,9 +40,14 @@ public class FireflyObserver extends Application {
         toolbar.setSpacing(10);
         toolbar.setAlignment(Pos.CENTER);
 
-        Button generateTorusButton = new Button("Generate Torus of Fireflies");
+        Button generateTorusButton = new Button("Generate Torus");
+        generateTorusButton.setOnMouseClicked(event -> ProcessManager.createTorus(N, M));
+
+        Button killAllButton = new Button("Kill all");
+        killAllButton.setOnMouseClicked(event -> ProcessManager.killProcesses());
 
         toolbar.getChildren().add(generateTorusButton);
+        toolbar.getChildren().add(killAllButton);
 
 
         root.setTop(toolbar);
@@ -52,6 +58,9 @@ public class FireflyObserver extends Application {
         // Set up the scene and show the stage
         Scene scene = new Scene(root, M * SQUARE_SIZE, N * SQUARE_SIZE + 100);
         primaryStage.setScene(scene);
+
+        primaryStage.setOnCloseRequest(event -> ProcessManager.killProcesses());
+
         primaryStage.show();
 
         try {
