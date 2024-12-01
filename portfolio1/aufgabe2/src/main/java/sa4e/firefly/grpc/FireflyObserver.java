@@ -18,8 +18,8 @@ import sa4e.firefly.grpc.observer.ProcessManager;
 
 public class FireflyObserver extends Application {
 
-    private static final int N = 4; // Number of rows
-    private static final int M = 4; // Number of columns
+    private static final int N = 6; // Number of rows
+    private static final int M = 6; // Number of columns
     public static final double SQUARE_SIZE = 50.0; // Size of each square
 
     private static int port = 50051;
@@ -43,10 +43,16 @@ public class FireflyObserver extends Application {
         toolbar.setAlignment(Pos.CENTER);
 
         Button generateTorusButton = new Button("Generate Torus");
-        generateTorusButton.setOnMouseClicked(event -> ProcessManager.createTorus(M, N));
+        generateTorusButton.setOnMouseClicked(event -> {
+            generateTorusButton.setVisible(false);
+            ProcessManager.createTorus(M, N);
+        });
 
         Button killAllButton = new Button("Kill all");
-        killAllButton.setOnMouseClicked(event -> ProcessManager.killProcesses());
+        killAllButton.setOnMouseClicked(event -> {
+            ProcessManager.killProcesses();
+            generateTorusButton.setVisible(true);
+        });
 
         toolbar.getChildren().add(generateTorusButton);
         toolbar.getChildren().add(killAllButton);
