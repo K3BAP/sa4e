@@ -126,7 +126,62 @@ Der \texttt{FireflyClient} bekommt einen Port übergeben, der den Server identif
 Jedes Glühwürmchen hat also einen \texttt{FireflyServer}, über den andere Glühwürmchen es erreichen können, und eine Anzahl $n > 0$ an \texttt{FireflyClients}, die die Nachbarn des Glühwürmchens repräsentieren. Die restliche Logik konnte weitestgehend aus Aufgabe 1 übernommen werden.
 
 \subsection*{Visualisierung der Glühwürmchen}
+Auch wenn die UI, wenn man das so nennen kann, aus Aufgabe 1 bereits viel von dem hätte tun können, was hier gebraucht wird, sind doch noch einige Erweiterungen und Optimierungen nötig.
+
+Zunächst einmal ist die Anzahl der Glühwürmchen nicht mehr fest durch das Programm definiert, sondern die Aktivität der Glühwürmchen muss beobachtet werden und entsprechend viele Glühwürmchen visualisiert werden. Zum Zwecke der Beobachtung bekommt auch der \emph{Observer}, der die Visualisierung übernimmt, einen \texttt{FireflyServer}, an den Glühwürmchen ihre Statusinformationen senden können. Daraus kann dann der Observer eine Visualisierung der Glühwürmchen erstellen.
+
+Da die Glühwürmchen auch immer ihre Portnummer mitsenden, kann der Observer diese anhand des Ports identifizieren. So kann er, wenn er die erste Nachricht von einem Glühwürmchen bekommt, entsprechend ein Quadrat anzeigen, das dieses repräsentiert. Bei darauffolgenden Nachrichten wird dann jeweils der Status des Quadrats aktualisiert.
+
+\begin{figure}[H]
+	\includegraphics[width=0.5\textwidth]{./img/screenshot_observer_idle}
+	\includegraphics[width=0.5\textwidth]{./img/screenshot_observer_two_fireflies}
+	\caption{Observer-GUI mit und ohne aktive Glühwürmchen}
+\end{figure}
+
+Bei einer Anzahl von $n$ Glühwürmchen werden diese in einem Quadrat der Kantenlänge $\lceil \sqrt{n} \rceil$ angeordnet, wobei das Quadrat von links nach rechts und von oben nach unten ausgefüllt wird. Damit man sieht, wo sich Glühwürmchen befinden, werden die nicht leuchtenden Glühwürmchen anders als in Aufgabe 1 dunkelblau anstatt schwarz dargestellt.
+
+Erwähnenswert ist, dass die Glühwürmchen die Portnummer des Observers in der Liste ihrer Nachbarn haben müssen, damit sie die Statusmeldungen an den Observer senden und entsprechend dargestellt werden können.
+
 
 \subsection*{Generierung und Visualisierung eines Torus}
+Eine weitere Herausforderung war die Koordination von vielen Glühwürmchen-Prozessen, um so einen Torus zu generieren, und diesen dann schlussendlich auch so zu visualisieren, wie die Glühwürmchen tatsächlich angeordnet sind.
+
+Glücklicherweise bietet Java mit der Methode \texttt{Runtime.exec()} und der \texttt{Process}-Klasse gute Werkzeuge, um Prozesse zu verwalten. Gradle wurde so konfiguriert, dass beim Ausführen des \texttt{runObserver}-Tasks eine ausführbare Jar-Datei erstellt wird, die das Glühwürmchen enthält. Dieses kann dann über den Befehl \texttt{java -jar} direkt ausgeführt werden.
+
+Um die vielen Prozesse zu verwalten, habe ich die Klasse \texttt{ProcessManager} angelegt. Diese bietet zunächst die grundlegenden Methoden \texttt{createFireflyProcess()} und \texttt{killProcesses()}, die zum erstellen einzelner Glühwürmchen-Prozesse und zum killen aller zuvor erstellten Prozesse verwendet werden können.
+
+Zusätzlich habe ich dort eine weitere Methode \texttt{createTorus()} hinzugefügt. Diese weist zunächst allen Glühwürmchen in einem MxN-Gitter einen Port zu und generiert mithilfe einer abgeänderten \texttt{TorusTopology}-Klasse aus Aufgabe 1 für jedes Glühwürmchen die Liste seiner Nachbarn (inklusive Port des Observers). Schlussendlich werden die Glühwürmchen-Prozesse gestartet.
+
+Um die Glühwürmchen korrekt als Torus zu visualisieren, ist es nötig, dass diese im Gitter bereits erstellt wurden, bevor der Observer die erste Nachricht von ihnen bekommt: ansonsten würden sie in der Reihenfolge visualisiert werden, in der die erste Nachricht beim Observer ankommt. Zu diesem Zweck erhält der \texttt{ProcessManager} eine Referenz auf das Firefly-Gitter und fügt die generierten Glühwürmchen dort bereits hinzu, bevor die dazugehörigen Prozesse gestartet werden. Die Glühwürmchen sind dann zunächst weiß, bis schließlich der Observer Nachrichten von ihnen erhält und sie korrekt visualisiert.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.5\textwidth]{./img/screenshot_observer_torus}
+	\caption{Erste Glühwürmchen im Torus werden vom Observer erkannt}
+\end{figure}
+
+\subsection*{Aufruf der Programme}
+Auch hier kam Gradle als Build-Tool zum Einsatz, wofür dank des Wrappers keine weitere Installation notwendig ist. Um den Observer zu starten, muss folgender Befehl verwendet werden:
+
+\texttt{./gradlew runObserver [observerPort (default 50051)]}
+
+Dieser Befehl kompiliert nicht nur den Observer und führt ihn aus, sondern kompiliert auch das Firefly-Programm und packt es in einer ausführbaren Jar-Datei. Diese kann dann beim Klick auf den \emph{Generate Torus}-Button vom \texttt{ProcessManager} aufgerufen werden. Um diese Funktion aufrecht zu erhalten, sollte der Port auf dem Default belassen werden ;)
+
+Will man dagegen nur das Firefly-Programm starten, kann dies auf zwei Wegen geschehen.
+
+\begin{enumerate}
+	\item Direkt über Gradle mit dem Befehl\\ \texttt{./gradlew runFirefly --args 'serverport [clientPorts...]'}
+	\item Alternativ kann zunächst die Jar-Datei erstellt werden über \\ \texttt{./gradlew jar}\\
+	Dann kann das Programm direkt aufgerufen werden über\\ \texttt{java -jar ./build/libs/firefly-grpc.jar serverPort [clientPorts]}
+\end{enumerate}
+
+
+\subsection*{Sonstige Schwierigkeiten}
+Lange Zeit habe ich mit Gradle gekämpft, bis es mir eine ausführbare Jar-Datei erstellt hat, die ich dann direkt über \texttt{Runtime.exec("java -jar ...")} ausführen konnte. Wenn ich über diese Methode versuche, den Prozess über Gradle zu starten (\texttt{gradle runFirefly}), schlägt dies aus mir nicht bekannten Gründen fehl. Letztendlich hat es aber über die Jar-Datei dann geklappt.
+
+Ein Problem, das immer noch besteht, ist, dass im Torus manchmal Glühwürmchen einfach sterben, bzw. zumindest die Kommunikation mit dem Observer abbricht. Die Prozesse laufen dann zwar immer noch, aber die Glühwürmchen verharren in der Visualisierung in einem Zustand. Ich konnte das Problem an der Stelle noch nicht identifizieren.
+
+\section*{Demo-Video}
+Das Demo-Video kann hier eingesehen werden: \url{https://youtu.be/WSfmdKwF6VY}
 	
 \end{document}
