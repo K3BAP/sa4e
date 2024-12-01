@@ -119,6 +119,14 @@ Der \texttt{FireflyRequest} enthält die wichtigen Informationen:
 
 Der Return-Typ ist im Grunde irrelevant, muss aber definiert werden.
 
+Die Kommunikation über gRPC habe ich in die Klassen \texttt{FireflyServer} und \texttt{FireflyClient} gekapselt, um davon zu abstrahieren und mich nirgendwo sonst mit den Eigenheiten von gRPC herumschlagen zu müssen. Die Klasse \texttt{FireflyServer} bekommt abgesehen von einem Port auch ein Objekt vom Typ \texttt{FireflyCallable} übergeben, welches eine Methode \texttt{flashStatusChanged()} enthält, die aufgerufen wird, wenn der Server einen Methodenaufruf empfängt.
 
+Der \texttt{FireflyClient} bekommt einen Port übergeben, der den Server identifiziert, an den dieser Client senden soll. Außerdem stellt er eine Methode \texttt{notifyFirefly()} bereit, über die der entsprechende Server angefragt wird.
+
+Jedes Glühwürmchen hat also einen \texttt{FireflyServer}, über den andere Glühwürmchen es erreichen können, und eine Anzahl $n > 0$ an \texttt{FireflyClients}, die die Nachbarn des Glühwürmchens repräsentieren. Die restliche Logik konnte weitestgehend aus Aufgabe 1 übernommen werden.
+
+\subsection*{Visualisierung der Glühwürmchen}
+
+\subsection*{Generierung und Visualisierung eines Torus}
 	
 \end{document}
