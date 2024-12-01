@@ -24,6 +24,12 @@ public class FireflyGrid extends GridPane implements FireflyCallable {
         server.init(this);
     }
 
+    public void clear() {
+        this.fireflies.clear();
+        this.firefliesByPort.clear();
+        redraw();
+    }
+
     private void redraw() {
         this.getChildren().clear();
 

@@ -10,8 +10,8 @@ import sa4e.firefly.grpc.common.FireflyServer;
 
 public class Firefly implements Runnable, FireflyCallable {
 
-    private final int clockLength = 10;
-    private final double coupling = 0.1;
+    private final int clockLength = 20;
+    private final double coupling = 0.20;
 
     private boolean pulsing = (Math.random() < 0.5);
     private double currentPhase = Math.random();
