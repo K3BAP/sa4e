@@ -1,0 +1,78 @@
+version: '3.8'
+
+networks:
+  xmaswishes_network:
+    driver: bridge
+
+services:
+  ### CREATE CASSANDRA CLUSTER WITH 3 NODES ###
+  cassandra-node1:
+    image: cassandra:5.0
+    container_name: cassandra-node1
+    networks:
+      - xmaswishes_network
+    ports:
+      - "9042:9042"
+    environment:
+      - CASSANDRA_CLUSTER_NAME=wishlist_cluster
+      - CASSANDRA_SEEDS=cassandra-node1
+      - CASSANDRA_START_RPC=true
+      - CASSANDRA_BROADCAST_ADDRESS=cassandra-node1
+      - CASSANDRA_BROADCAST_RPC_ADDRESS=cassandra-node1
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'DESCRIBE KEYSPACES'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  cassandra-node2:
+    image: cassandra:5.0
+    container_name: cassandra-node2
+    networks:
+      - xmaswishes_network
+    environment:
+      - CASSANDRA_CLUSTER_NAME=wishlist_cluster
+      - CASSANDRA_SEEDS=cassandra-node1
+      - CASSANDRA_START_RPC=true
+      - CASSANDRA_BROADCAST_ADDRESS=cassandra-node2
+      - CASSANDRA_BROADCAST_RPC_ADDRESS=cassandra-node2
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'DESCRIBE KEYSPACES'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+  
+  cassandra-node3:
+    image: cassandra:5.0
+    container_name: cassandra-node3
+    networks:
+      - xmaswishes_network
+    environment:
+      - CASSANDRA_CLUSTER_NAME=wishlist_cluster
+      - CASSANDRA_SEEDS=cassandra-node1
+      - CASSANDRA_START_RPC=true
+      - CASSANDRA_BROADCAST_ADDRESS=cassandra-node3
+      - CASSANDRA_BROADCAST_RPC_ADDRESS=cassandra-node3
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'DESCRIBE KEYSPACES'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+  
+  ### INITIALIZE CASSANDRA TABLES WITH CQLSH ###
+  cqlsh:
+    image: cassandra:5.0
+    container_name: cqlsh
+    depends_on:
+      cassandra-node1:
+        condition: service_healthy
+      cassandra-node2:
+        condition: service_healthy
+      cassandra-node3:
+        condition: service_healthy
+    networks:
+      - xmaswishes_network
+    volumes:
+      - ./cassandra/data.cql:/data.cql
+    entrypoint: ["sh", "-c", "until cqlsh cassandra-node1 -f /data.cql; do echo 'Waiting for Cassandra...'; sleep 2; done"]
+
