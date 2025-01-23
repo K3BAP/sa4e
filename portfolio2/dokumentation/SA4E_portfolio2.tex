@@ -93,7 +93,7 @@ Wie dem auch sei, das System durchläuft jedes Jahr drei Phasen, die je ein wach
 Folgender Ansatz wird in diesem Projekt umgesetzt:
 
 \begin{itemize}
-	\item \textbf{Backend:} Horizontal skalierbare, verteilte NoSQL-Datenbank. Simuliert eine Relationale Datenbank und kann in einer SQL-Ähnlichen Syntax angesprochen werden.
+	\item \textbf{Backend:} Horizontal skalierbare, verteilte Datenbank.
 	\item \textbf{Business-Logik:} Stateless Service, der die Schnittstelle zwischen Nutzer und Datenbank herstellt. Kann beliebig oft repliziert werden.
 	\item \textbf{Load-Balancer} Wird zwischen Frontend und Business-Logik geschaltet, um die Last gleichmäßig auf die Services zu verteilen.
 	\item \textbf{Frontend} Web-Applikation im Browser des Nutzers, ggf. auf dem gleichen Server wie die Business-Logik gehostet.
@@ -109,6 +109,34 @@ Ein Authentifizierungsservice wie OAuth wird nicht implementiert, da der Nordpol
 	\caption{Architektur des Systems}
 \end{figure}
 
+Ich habe mich bei der Implementierung für folgende Technologien entschieden:
+\begin{itemize}
+	\item \textbf{Backend:} Als Backend-Datenbank habe ich mich für \textbf{Apache Cassandra} entschieden. Dabei handelt es sich um eine horizontal skalierbare, verteilte NoSQL-Datenbank, die eine relationale Datenbank simuliert und mit einer SQL-Ähnlichen Sprache angesprochen wird.
+	Sie skaliert in Performance und Speicherkapazität linear mit der Anzahl der Knoten und ist somit ideal für große Datenmengen und großes Transaktionsaufkommen geeignet.
+	Mithilfe von Hashing wird bereits durch den Datenbank-Driver des Clients (in diesem Fall der Geschäftslogik) festgestellt, auf welchem Datenbank-Node eine Anfrage am schnellsten bearbeitet werden kann.
+	So wird die Last optimal auf das Cluster verteilt.
+	\item \textbf{Business-Logik:} Bei der Business-Logik setze ich auf \textbf{RESTful Microservices}, bzw. in diesem Fall nur einen WishlistService, der die Wunschlisten und Wünsche verwaltet.
+	Weitere Microservices wie eine Nutzerverwaltung und einen Authentifizierungs-Service spare ich mir an dieser Stelle, könnten aber einfach hinzugefügt werden.
+	Diese Services sind stateless (speichern keine Sitzungsdaten), und können daher einfach repliziert werden.
+	Als Technologie habe ich mich für \textbf{PHP} mit dem Framework \textbf{CodeIgniter} entschieden.
+	Vorteil daran ist, dass der Service auf einem normalen Apache-Webserver läuft, der sehr leichtgewichtig ist.
+	CodeIgniter ist ebenfalls ein Framework, dass sehr auf Performance und Leichtgewicht optimiert ist, und nur die nötigsten Funktionen zur Verfügung stellt, so zum Beispiel eingebautes Routing, Separation nach dem MVC-Modell, diverse eingebaute Datenbank-Treiber sowie einige essenzielle Sicherheits-Features.
+	Durch das Hosting auf einem Apache-Server und die Verwendung von CodeIgniter könnte außerdem die Verteilung von Frontend-Websites auch über diesen Service realisiert werden.
+	\item \textbf{Load-Balancer:} Um die Last gleichmäßig auf die Instanzen des WishlistService zu verteilen, wird \textbf{NGINX} als Load-Balancer verwendet. NGINX ist ein hochperformanter Webserver, Reverse-Proxy und Load-Balancer, der in diesem Fall die Anfragen nach dem Round-Robin-Prinzip auf die vorhandenen Services verteilt. Er erkennt außerdem Ausfälle einzelner Service-Instanzen und leitet Anfragen ggf. um.
+	\item \textbf{Frontend:} Das Frontend wird als \textbf{Vue.js Single-Page-Applikation} realisiert. Dadurch wird die gesamte App mit dem ersten Aufruf des Web-Links geladen und dann lokal beim Nutzer gecached.
+	So wird die Last des Webservers reduziert.
+	Um die Last des Webservers weiter zu reduzieren, kann auch dieser repliziert und hinter einen Load Balancer geschaltet werden.
+	Außerdem wäre es möglich, Bilder, CSS- und Javascript-Dateien über ein \emph{Content Delivery Network (CDN)} bereitzustellen, um so weiter die Last des Webservers zu reduzieren. Dieser müsste dann nur noch eine wenige Zeilen lange HTML-Datei ausliefern. 
+\end{itemize}
+
+\section*{Aufgabe 3 - Prototyp}
+Um ein verteiltes System zu simulieren, verwende ich \textbf{Docker-Compose} zur Verwaltung einiger Docker-Container, die die entsprechenden Maschinen in der Architektur emulieren.
+So ist es auch möglich, die Lösung schnell und einfach auf einem anderen Rechner laufen zu lassen.
+
+Bei der Implementierung habe ich einen Back-to-Front-Ansatz verfolgt.
+Ich habe also damit begonnen, die Datenbank einzurichten, dann die Microservices erstellt, den Load-Balancer konfiguriert und zuletzt die Frontend-Applikation gebaut.
+
+Für die Datenbank habe ich ein Cassandra-Cluster mit drei Knoten erstellt. Sobald das Cluster erfolgreich hochgefahren ist, startet ein weiterer Cassandra-Container, der mithilfe von \texttt{cqlsh} eine CQL-Datei auf der Datenbank ausführt, um den Keyspace und die benötigten Tabellen einzurichten. Dies ist nur beim ersten Hochfahren des Clusters relevant, da die Daten in den Containern der Nodes persistent gespeichert sind.
 
 
 	
