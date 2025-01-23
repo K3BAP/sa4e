@@ -6,7 +6,7 @@ dotenv.config();
 
 const client = new Client({
   contactPoints: [process.env.CASSANDRA_CONTACT_POINTS || "127.0.0.1"],
-  localDataCenter: "datacenter1",
+  localDataCenter: process.env.CASSANDRA_DATA_CENTER || 'datacenter1',
   keyspace: process.env.CASSANDRA_KEYSPACE || "xmaswishes",
 });
 

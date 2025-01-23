@@ -3,7 +3,6 @@ FROM node:22
 WORKDIR /app
 
 COPY package*.json ./
-COPY docker.env ./.env
 COPY tsconfig.json ./
 COPY src ./src
 

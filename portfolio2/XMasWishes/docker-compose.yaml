@@ -76,3 +76,47 @@ services:
       - ./cassandra/data.cql:/data.cql
     entrypoint: ["sh", "-c", "until cqlsh cassandra-node1 -f /data.cql; do echo 'Waiting for Cassandra...'; sleep 2; done"]
 
+### START NODE.JS MICROSERVICE CLUSTER ###
+  wishlistservice-node1:
+    build:
+      context: ./wishlist-service
+    container_name: wishlistservice-node1
+    depends_on:
+      cqlsh:
+        condition: service_completed_successfully
+    networks:
+      - xmaswishes_network
+    ports:
+      - 3000:3000
+    environment:
+      - CASSANDRA_CONTACT_POINTS=cassandra-node1
+      - CASSANDRA_KEYSPACE=xmaswishes
+      - CASSANDRA_DATACENTER=datacenter1
+
+  wishlistservice-node2:
+    build:
+      context: ./wishlist-service
+    container_name: wishlistservice-node2
+    depends_on:
+      cqlsh:
+        condition: service_completed_successfully
+    networks:
+      - xmaswishes_network
+    environment:
+      - CASSANDRA_CONTACT_POINTS=cassandra-node1
+      - CASSANDRA_KEYSPACE=xmaswishes
+      - CASSANDRA_DATACENTER=datacenter1
+
+  wishlistservice-node3:
+    build:
+      context: ./wishlist-service
+    container_name: wishlistservice-node3
+    depends_on:
+      cqlsh:
+        condition: service_completed_successfully
+    networks:
+      - xmaswishes_network
+    environment:
+      - CASSANDRA_CONTACT_POINTS=cassandra-node1
+      - CASSANDRA_KEYSPACE=xmaswishes
+      - CASSANDRA_DATACENTER=datacenter1
