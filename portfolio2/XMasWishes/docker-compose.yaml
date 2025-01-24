@@ -84,8 +84,6 @@ services:
         condition: service_completed_successfully
     networks:
       - xmaswishes_network
-    ports:
-      - 3000:3000
     environment:
       - CASSANDRA_CONTACT_POINTS=cassandra-node1
       - CASSANDRA_KEYSPACE=xmaswishes
@@ -118,3 +116,17 @@ services:
       - CASSANDRA_CONTACT_POINTS=cassandra-node1
       - CASSANDRA_KEYSPACE=xmaswishes
       - CASSANDRA_DATACENTER=datacenter1
+
+  service-load-balancer:
+    build:
+      context: ./service-load-balancer
+    container_name: service-load-balancer
+    depends_on:
+      - wishlistservice-node1
+      - wishlistservice-node2
+      - wishlistservice-node3
+    networks:
+      - xmaswishes_network
+    ports:
+      - 3000:3000
+    
