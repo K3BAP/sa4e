@@ -1,6 +1,6 @@
 import {Request, Response} from 'express';
 import { v4 as uuidv4 } from "uuid";
-import client from '../services/CassandraService';
+import client from '../../services/CassandraService';
 
 export default async function submitWishlist(req: Request, res: Response) {
     const {name, wishes} = req.body;
