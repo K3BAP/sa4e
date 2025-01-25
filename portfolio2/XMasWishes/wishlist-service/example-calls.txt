@@ -10,3 +10,7 @@ curl -X POST http://localhost:3000/api/submitWishlist \
 curl -X GET http://localhost:3000/api/getWishlists
 
 curl -X POST http://localhost:3000/api/beginProcessing
+
+curl -X PATCH http://localhost:3000/api/loadOnSleigh/<wish_id>
+
+curl -X GET "http://localhost:3000/api/getWishlistByName?name=Alice"

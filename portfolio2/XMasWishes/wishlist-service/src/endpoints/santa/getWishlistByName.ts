@@ -19,6 +19,7 @@ export const getWishlistByName = async (req: Request, res: Response): Promise<vo
       FROM wishlists
       WHERE name = ?
       LIMIT 1
+      ALLOW FILTERING
     `;
 
     const wishlistResult = await client.execute(wishlistQuery, [name], { prepare: true });
@@ -36,6 +37,7 @@ export const getWishlistByName = async (req: Request, res: Response): Promise<vo
       SELECT wish_id, wish, status
       FROM wishes
       WHERE wishlist_id = ?
+      ALLOW FILTERING
     `;
 
     const wishesResult = await client.execute(wishesQuery, [wishlistId], { prepare: true });
