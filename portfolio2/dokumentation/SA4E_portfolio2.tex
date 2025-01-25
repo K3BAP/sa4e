@@ -129,6 +129,13 @@ Ich habe mich bei der Implementierung für folgende Technologien entschieden:
 	Außerdem wäre es möglich, Bilder, CSS- und Javascript-Dateien über ein \emph{Content Delivery Network (CDN)} bereitzustellen, um so weiter die Last des Webservers zu reduzieren. Dieser müsste dann nur noch eine wenige Zeilen lange HTML-Datei ausliefern. 
 \end{itemize}
 
+\subsection*{EDIT: Änderungen wegen Problemen in Aufgabe 3}
+\begin{itemize}
+	\item Ich hätte wirklich gerne PHP verwendet für die Implementierung der Business-Logik, um zu sehen, wie sich aktuelle PHP-Versionen so schlagen von der Performance her.
+	Leider ist mir nach ewigen herumprobieren aufgefallen, dass der PHP-Support des Cassandra-Treibers für PHP bereits bei PHP 7.1 geendet ist.
+	Da ich nicht mit seit Jahren veralteter Technologie arbeiten wollte, habe ich mich daher wohl oder übel dazu entschieden, den \textbf{Microservice mithilfe von Node.js und Typescript} umzusetzen.
+\end{itemize}
+
 \section*{Aufgabe 3 - Prototyp}
 Um ein verteiltes System zu simulieren, verwende ich \textbf{Docker-Compose} zur Verwaltung einiger Docker-Container, die die entsprechenden Maschinen in der Architektur emulieren.
 So ist es auch möglich, die Lösung schnell und einfach auf einem anderen Rechner laufen zu lassen.
@@ -138,6 +145,16 @@ Ich habe also damit begonnen, die Datenbank einzurichten, dann die Microservices
 
 Für die Datenbank habe ich ein Cassandra-Cluster mit drei Knoten erstellt. Sobald das Cluster erfolgreich hochgefahren ist, startet ein weiterer Cassandra-Container, der mithilfe von \texttt{cqlsh} eine CQL-Datei auf der Datenbank ausführt, um den Keyspace und die benötigten Tabellen einzurichten. Dies ist nur beim ersten Hochfahren des Clusters relevant, da die Daten in den Containern der Nodes persistent gespeichert sind.
 
+Als nächstes ging es dann an die Entwicklung des Wishlist-Services.
+Leider wurde ich hier dann doch mit den Limitierungen bzw. Eigenheiten von Cassandra konfrontiert:
+Anders als bei einer Relationalen Datenbank ist das Suchen nach Werten durch das Schlüsselwort \texttt{WHERE} nur auf dem Primärschlüssel einer Tabelle effizient möglich.
+Daher ist zum Beispiel ein Statement, dass alle Geschenke, die auf \emph{In Bearbeitung} stehen, auf \emph{In Zustellung} stellt, nicht so einfach umzusetzen und erst recht nicht effizient.
+Um die dadurch entstehende Lastspitze beim Beladen des Schlittens abzufangen die Logistik etwas geändert, sodass die Geschenke nun, sobald sie produziert sind, von dem produzierenden Elfen auf den Schlitten gelegt werden, der dann den Wunsch entsprechend kennzeichnet.
+Aber vielleicht wäre es auch egal durch die reine Anzahl an Cassandra-Nodes, die im Produktivbetrieb ja nötig wären.
+Da kenne ich mich leider nicht genug aus mit Cassandra, um da ein fundiertes Urteil zu fällen.
 
+Das Einrichten von NGINX als Load Balancer ging sehr einfach und bedurfte nur weniger Zeilen Konfiguration in der \texttt{default.conf}.
+Ich habe beispielhaft drei Instanzen des Wishlist-Service eingebaut und den Load Balancer entsprechend konfiguriert.
+Zum Testen habe ich einen Ping-Endpoint im Service eingebaut, um zu verifizieren, dass die Anfragen tatsächlich auf die Instanzen verteilt werden.
 	
 \end{document}
