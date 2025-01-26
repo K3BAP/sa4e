@@ -2,7 +2,9 @@
   <v-app>
     <v-app-bar app>
       <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
-      <v-toolbar-title>Wishlist App</v-toolbar-title>
+      <v-toolbar-title>
+        XMasWishes
+      </v-toolbar-title>
     </v-app-bar>
 
     <v-navigation-drawer app v-model="drawer" temporary>

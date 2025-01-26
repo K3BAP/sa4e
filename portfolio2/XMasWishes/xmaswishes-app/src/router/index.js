@@ -3,6 +3,7 @@ import { createRouter, createWebHistory } from "vue-router";
 import SubmitWishlist from "../views/SubmitWishlist.vue";
 import ElvesDashboard from "../views/ElvesDashboard.vue";
 import SantaDashboard from "../views/SantaDashboard.vue";
+import SuccessPage from "@/views/SuccessPage.vue";
 
 const routes = [
   {
@@ -20,6 +21,11 @@ const routes = [
     name: "SantaDashboard",
     component: SantaDashboard,
   },
+  {
+    path: "/success",
+    name: "Success",
+    component: SuccessPage,
+  }
 ];
 
 const router = createRouter({
