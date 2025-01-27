@@ -156,5 +156,113 @@ Da kenne ich mich leider nicht genug aus mit Cassandra, um da ein fundiertes Urt
 Das Einrichten von NGINX als Load Balancer ging sehr einfach und bedurfte nur weniger Zeilen Konfiguration in der \texttt{default.conf}.
 Ich habe beispielhaft drei Instanzen des Wishlist-Service eingebaut und den Load Balancer entsprechend konfiguriert.
 Zum Testen habe ich einen Ping-Endpoint im Service eingebaut, um zu verifizieren, dass die Anfragen tatsächlich auf die Instanzen verteilt werden.
+
+Für das Frontend habe ich eine Vue.js Webapp zum größten Teil von KI generieren lassen, was sehr gut funktioniert hat.
+Ich musste nur gelegentlich noch Anpassungen vornehmen, um die Kompatibilität mit den Service-Endpunkten zu gewährleisten.
+Der Vorteil einer Vue.js Web-App (Ebenso React oder Angular) ist, dass der Webserver nur beim erstmaligen Zugriff angefragt wird, und danach alles lokal beim Nutzer abläuft.
+Daher wird die Last auf dem Webserver minimiert und er muss nicht notwendigerweise horizontal skaliert werden.
+Es wäre aber problemlos möglich, auch hier einen Load-Balancer dazwischen zu schalten und beliebig viele Webserver auf der ganzen Welt zu betreiben, die die App bereitstellen.
+Ich habe mir das in diesem Fall gespart, da mein Rechner bereits mit den nun vorhandenen acht Docker-Containern ziemlich zu kämpfen hat.
+Die größte Systemlast wird dabei aber durch die drei Cassandra-Instanzen verursacht.
+
+\subsection*{Verwendung der Docker-Compose Anwendung}
+Die Compose-Anwendung öffnet zwei Ports auf der Host-Maschine.
+Über \textbf{Port 8080} ist der Webserver zu erreichen, auf dem die Vue-Applikation liegt.
+Auf \textbf{Port 3000} erreicht man den Load Balancer, der die Anfragen entsprechend auf die Wishlist-Service-Instanzen aufteilt.
+
+\subsection*{API-Dokumentation}
+\begin{itemize}
+	\item \texttt{GET /api/ping}\\ Löst eine Log-Nachricht im Webservice aus. So kann man in Docker-Compose zum Beispiel sehen, welche Service-Instanz den Call erhalten hat.
 	
+	\item \texttt{GET /api/getWishlists}\\ Gibt eine Liste aller Wunschlisten mit ID und Name zurück.\\
+	\textbf{Returns:}
+	\begin{lstlisting}
+{
+	"wishlist_id": uuid,
+	"name": string
+}[]
+	\end{lstlisting}
+	
+	\item \texttt{POST /api/submitWishlist}\\ Trägt eine Wunschliste inklusive Wünschen in die Datenbank ein.\\
+	\textbf{Accepts:}
+	\begin{lstlisting}
+{
+	"name": string,
+	"wishes" string[]
+}
+	\end{lstlisting}
+	
+	\item \texttt{POST /api/beginProcessing}\\ Gibt einen Wunsch zurück, der aktuell auf \emph{Formuliert} steht, und setzt ihn auf \emph{In Bearbeitung}.
+	
+	\item \texttt{PATCH /api/loadOnSleigh/<wish\_id>}\\ Setzt den gegebenen Wunsch auf \emph{In Zustellung}.
+	
+	\item \texttt{GET /api/getWishlistByName?name=<name>}\\ Gibt die Wunschliste mit allen Wünschen für eine Person zurück.
+	
+	\item \texttt{PATCH /api/setWishDelivered/<wish\_id>}\\ Setzt den gegebenen Wunsch auf \emph{Zugestellt}.
+	
+\end{itemize}
+
+\subsection*{Performance-Messung}
+Da mein Rechner allein durch die Ausführung aller Komponenten von XMasWishes sehr überfordert ist, ist dieses Beispiel vermutlich sehr verzerrt.
+Mein Rechner alleine ist definitiv nicht dazu in der Lage, so viele Anfragen pro Sekunde zu stellen wie es mehrere Milliarden Menschen könnten.
+Trotzdem habe ich einen kleinen Versuchsaufbau eingerichtet:
+Ich lasse in einem Java-Programm je Versuchsdurchlauf 15 Sekunden lang immer wieder den \texttt{getWishlists}-Endpoint aufrufen, und zähle die Anzahl der Aufrufe. Das ganze führe ich 40 mal durch und berechne im Anschluss ein paar Statistiken dazu.
+
+\subsection*{Ergebnisse}
+Folgende Abbildungen zeigen die Ergebnisse meiner Auswertung. 
+Aufgrund der vielen Durchläufe konnte ich die Requests pro 15 Sekunden recht gut einschätzen.
+Im Histogramm ist das 95\%-Konfidenzintervall in Blau eingezeichnet.
+
+\begin{figure} [H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{./img/histogram}
+	\caption{Histogramm der Ergebnisse}
+\end{figure}
+
+\begin{figure} [H]
+	\centering
+	\includegraphics[width=0.3\textwidth]{./img/boxplot}
+	\caption{Boxplot der Ergebnisse}
+\end{figure}
+
+\begin{lstlisting}
+	> summary(results)
+	Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+	6059    6966    7072    7035    7128    7528 
+\end{lstlisting}
+
+Der Durchschnittswert liegt bei etwa 7000 Requests pro 15 Sekunden.
+Pro Sekunde wären das also etwa 466 Anfragen pro Sekunde.
+Die errechnete Last in Phase 3 (Auslieferung) beträgt allerdings 120000 Anfragen pro Sekunde.
+Da die hier verwendeten Technologien linear horizontal skalieren, bräuchte man $120000 \div 466 \approx 258 $ mal so viele Ressourcen, wie ich auf meinem Laptop zur Verfügung habe.
+Der Vollständigkeit halber hier nochmal meine Systemspezifikationen:
+
+\begin{table}[h]
+	\centering
+	\begin{tabular}{|l|l|}
+		\hline
+		\textbf{Merkmal} & \textbf{Spezifikation} \\
+		\hline
+		CPU-Bezeichnung & AMD Ryzen 5 4500U with Radeon Graphics\\
+		CPU-Architektur & x86 (AMD Renoir) \\
+		CPU-Fertigungsverfahren & 7 nm (TSMC) \\
+		\hline
+		Anzahl Kerne / Threads & 6 / 6 \\
+		Basistaktfrequenz & 2.3 GHz \\
+		Maximale Boost-Taktfrequenz & 4.0 GHz \\
+		\hline
+		L1-Cache & 384 KB \\
+		L2-Cache & 3 MB \\
+		L3-Cache & 8 MB \\
+		\hline
+		TDP (Thermal Design Power) & 15 Watt \\
+		Maximale Temperatur & 105 °C \\
+		\hline
+		Arbeitsspeicher & 2x4GB DDR4-3200 (Dual Channel) \\
+		\hline
+		Erscheinungsdatum & 07.01.2020 \\
+		\hline
+	\end{tabular}
+\end{table}
+
 \end{document}
