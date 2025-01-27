@@ -84,6 +84,7 @@ export default {
         searched.value = true;
       } catch (error) {
         console.error("Error fetching wishlist:", error);
+        wishlist.value = [];
       } finally {
         loading.value = false;
       }
@@ -99,6 +100,7 @@ export default {
         wish.status = "completed"; // Update status in the UI
       } catch (error) {
         console.error("Error marking wish as completed:", error);
+        alert("Wish could not be marked as delivered!")
       }
     };
 

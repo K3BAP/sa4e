@@ -130,3 +130,11 @@ services:
     ports:
       - 3000:3000
     
+  webserver:
+    build:
+      context: ./xmaswishes-app
+    container_name: webserver
+    depends_on: 
+      - service-load-balancer
+    ports:
+      - 8080:8080
