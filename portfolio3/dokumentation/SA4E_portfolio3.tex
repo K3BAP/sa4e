@@ -1,0 +1,90 @@
+% !TeX spellcheck = de_DE
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\usepackage{svg}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{amsmath,amsthm,amsfonts,amssymb,amscd}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage[skip=3pt]{parskip}
+\usepackage[ngerman]{babel}
+\pagestyle{empty}
+\titleformat*{\section}{\large\bfseries}
+\titleformat*{\subsection}{\bfseries}
+
+%
+\geometry{
+	a4paper,
+	total={170mm,240mm},
+	left=20mm,
+	top=30mm,
+}
+
+\date{}
+%Bitte ausfüllen
+\newcommand\course{Software Architectures for Enterprises}
+\newcommand\hwnumber{\large Portfolio 3}
+\newcommand\Name{Fabian Sponholz}
+\newcommand\Neptun{1561546}
+
+%Matheinheiten
+\newcommand\m{\:\textrm{m}}
+\newcommand\M{\:\Big[\textrm{m}\Big]}
+\newcommand\mm{\:\textrm{mm}}
+\newcommand\MM{\:\Big[\textrm{mm}\Big]}
+\newcommand\un{\underline}
+\newcommand\s{\:\textrm{s}}
+\newcommand\bS{\:\Big[\textrm{S}\Big]}
+\newcommand\ms{\:\frac{\textrm{m}}{\textrm{s}}}
+\newcommand\MS{\:\Big[\frac{\textrm{m}}{\textrm{s}}\Big]}
+\newcommand\mss{\:\frac{\textrm{m}}{\textrm{s}^2}}
+\newcommand\MSS{\:\Big[\frac{\textrm{m}}{\textrm{s}^2}\Big]}
+
+%Trennlinie
+\newcommand\separator{\rule{\linewidth}{0.5pt}}
+
+%Bitte nicht einstellen
+\renewcommand{\figurename}{Abbildung}
+\renewcommand{\tablename}{Tabelle}
+\pagestyle{fancyplain}
+\headheight 35pt
+\lhead{\Name\\\Neptun}
+\chead{\textbf{ \hwnumber}}
+\rhead{\course \\ \today}
+\lfoot{}
+\cfoot{}
+\rfoot{\small\thepage}
+\headsep 1.5em
+
+\begin{document}
+	
+\section*{Aufgabe 1 - Basis-Architektur}
+\subsection*{Erste Überlegungen zur Architektur}
+Zuerst habe ich mir überlegt, wie ich das Spiel \emph{Ave Cäsar} auf eine Architektur aus Microservices und einer skalierbaren Datenverwaltung mit Apache Kafka abbilden kann.
+Dabei liegt es nahe, in Kafka zunächst für jedes Segment ein eigenes Topic anzulegen, für das dann im Folgenden verschiedene Producer und Consumer erstellt werden können.
+
+Die Streitwagen werden dann jeweils durch eine Message repräsentiert, optimalerweise in Form eines JSON-Strings um Statusinformationen zu transportieren.
+ 
+
+Jedes Segment wird dann von einem eigenen Microservice repräsentiert, der jeweils als Consumer auf dem ihm zugeordneten Kafka Topic agiert.
+So werden ankommende Streitwagen vom Service gefunden und können an das jeweils nächste Segment (bzw. eines der möglichen nächsten Segmente) durch einen Producer weitergeleitet werden, wo bereits der nächste Segment-Service bereitsteht.
+
+Für das Management des Systems muss außerdem ein zentrales Verwaltungsprogramm geschrieben werden, das den Streckenverlauf aus dem zuvor generierten JSON einliest und dann folgende Schritte unternimmt:
+
+\begin{enumerate}
+	\item \emph{Setup des Kafka-Servers} - Für jedes Streckensegment und für das Time-Tracking muss ein Kafka-Topic erstellt werden.
+	\item \emph{Instantiierung der Microservices} - Für jedes Segment muss eine Instanz des Segment-Service erstellt werden, wobei die nötigen Informationen an das Programm weitergegeben werden müssen.
+	\item \emph{Start-and-Goal Segmente} - Mit den Start-And-Goal-Segmenten muss in besonderer Weise kommuniziert werden, damit eine Ausgabe der Gesamtlaufzeit am Ende möglich ist.
+	Es ist auch denkbar, die entsprechenden Programme erst bei Start des Rennens zu instantiieren.
+	Ein zusätzliches Kafka-Topic sollte verwendet werden, um die Umlaufzeiten zu messen (es ist ja möglich, dass ein Wagen auf einem anderen Segment ankommt als jenes, von dem er gestartet ist).
+	\item \emph{Start des Rennens} - Die Start-and-Goal Segmente müssen auf Kommando informiert/instantiiert werden, um die Streitwagen entsprechend ins Rennen zu schicken.
+	\item \emph{Ausgabe der Ergebnisse} - Am Ende müssen die Umlaufzeiten der einzelnen Wagen ausgegeben werden.
+	\item \emph{Aufräumen} - Die erstellten Prozesse müssen terminiert und die Kafka Topics gelöscht werden.
+\end{enumerate}
+
+
+\end{document}
