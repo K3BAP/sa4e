@@ -1,0 +1,3 @@
+rootProject.name = 'CuCuCo'
+include 'common', 'CuCuCo-Admin', 'SegmentService'
+
