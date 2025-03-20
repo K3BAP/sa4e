@@ -86,5 +86,77 @@ Für das Management des Systems muss außerdem ein zentrales Verwaltungsprogramm
 	\item \emph{Aufräumen} - Die erstellten Prozesse müssen terminiert und die Kafka Topics gelöscht werden.
 \end{enumerate}
 
+\subsection*{Implementierung}
+Bezüglich der Kafka-Konfiguration habe ich mich an obige Architektur gehalten: Für jedes Segment wird ein Kafka-Topic erstellt und es gibt ein weiteres Kafka-Topic \texttt{timetable}, über das die Start-Goal-Segmente über den Start des Rennens informiert werden und in die die Finish-Zeiten der einzelnen Streitwagen geschrieben werden.
+
+Meine Implementierung besteht aus drei Komponenten: 
+\begin{enumerate}
+	\item Einer Bibliothek aus Daten-Klassen, die für den Umgang mit JSON-Objekten in der Kurs-Definition und der Messages in den Kafka-Topics zuständig sind.
+	\item Einem Micro-Service, der für jedes Segment der Strecke je einmal instantiiert wird und das Weiterleiten an die nächsten Segmente übernimmt.
+	\item Ein zentrales Programm, dass die Architektur in Kafka vorbereitet, die Micro-Services startet, das Rennen initiiert und überwacht, das Ergebnis ausgibt und schlussendlich die Micro-Services herunterfährt und die Architektur in Kafka wieder zurücksetzt.
+\end{enumerate}
+
+\subsubsection*{Bibliothek aus Daten-Klassen}
+Hier habe ich zunächst die Klassen \texttt{CourseDefinition}, \texttt{Track} und \texttt{Segment} erstellt, die zusammen die JSON-Struktur repräsentieren, die von \texttt{circular\_course.py} erstellt wird.
+Dazu kommt noch die Klasse \texttt{Chariot}, die einen Streitwagen repräsentiert und als Nachricht in die Kafka-Topics geschrieben wird.
+Bisher enthält die Klasse nur eine Streitwagen-ID und einen Rundenzähler, wird aber vermutlich in Aufgabe 3 noch erweitert werden.
+Zuletzt gibt es noch eine Klasse \texttt{TimetableEntry}, die die Nachrichten im \texttt{timetable}-Topic repräsentieren.
+Wo es erforderlich ist enthalten die Klassen je eine Methode \texttt{toJson()} und eine statische Methode \texttt{fromJson()}, die mithilfe von \emph{Gson} die entsprechenden Konversionen von und nach JSON realisieren.
+
+\subsubsection*{Segment-Service}
+Diese Komponente enthält das Interface \texttt{SegmentRoutine}, durch welches verschiedene Verhaltensweisen für die verschiedenen Segment-Typen erzielt werden.
+Für Aufgabe 1 stehen folgende Implementierungen zur Verfügung:
+\begin{itemize}
+	\item \texttt{StandardSegment} repräsentiert das Segment vom Typ \texttt{normal}.
+	Hier werden in der Hauptroutine mit einem Consumer die Streitwagen vom dem Segment zugeordneten Topic abgerufen und dann einfach zufällig an eines der nachfolgenden Segmente weitergegeben, indem sie per Producer in das entsprechende Topic geschrieben werden.
+	
+	\item \texttt{StartAndGoal} repräsentiert das Segment vom Typ \texttt{start-goal}.
+	Es verhält sich weitestgehend wie das \texttt{StandardSegment} und erbt auch von diesem.
+	Es wurden allerdings ein paar zusätzliche Features eingebaut:
+	\begin{itemize}
+		\item Neben seinem eigenen Topic lauscht das Segment auch auf dem Topic \texttt{timetable}.
+		Wird dort eine Nachricht gesendet, die den Start des Rennens markiert, wird ein neuer Streitwagen erstellt und auf eines der nachfolgenden Segmente befördert.
+		
+		\item Wenn ein Streitwagen das Segment passiert, wird der Rundenzähler um eins erhöht
+		
+		\item Hat der Streitwagen alle Runden absolviert, so wird er nicht weitergeleitet und stattdessen ein Eintrag in das Topic \texttt{timetable} geschrieben.
+		Dieser Eintrag enthält die Systemzeit zum Zeitpunkt des Eintreffens, um eine Laufzeitmessung für die ganze Strecke zu realisieren.
+	\end{itemize}
+\end{itemize}
+Die \texttt{Main}-Klasse des Programms bekommt eine JSON-Repräsentation des Segments, für dass die Instanz verantwortlich ist, als Argument übergeben.
+Nachfolgend wird anhand des \texttt{type}-Attributs entschieden, welche Implementierung für die \texttt{SegmentRoutine} verwendet wird, und diese wird initialisiert und gestartet.
+
+\subsubsection*{Admin-Tool}
+Das Admin-Tool bekommt als Argument einen Pfad zu einer JSON-Datei übergeben, in der sich die Kurs-Definition befindet.
+Diese wird aus dem JSON eingelesen und steht fortan als Objekt in Java zur Verfügung.
+
+Dann werden über einen Kafka \texttt{AdminClient} alle notwendigen Topics erstellt: Je eines für jedes Segment und ein weiteres Topic \texttt{timetable} für die Zeiterfassung und Steuerung.
+
+Als nächstes werden die Service-Prozesse gestartet und in einer Liste verwaltet, um diese später wieder beenden zu können.
+
+Nachdem alle Prozesse erstellt wurden, kann das Rennen durch einen Druck der Enter-Taste gestartet werden.
+Dies geschieht, indem ein \texttt{TimetableEntry}-Objekt mit Typ \texttt{started} in das \texttt{timetable}-Topic geschrieben wird.
+
+Nun wird außerdem ein Observer-Thread gestartet, der das \texttt{timetable}-Topic beobachtet und eine Meldung ausgibt, sobald ein Streitwagen (bzw. alle Streitwagen) im Ziel ist.
+
+Nach einem weiteren Druck auf die Enter-Taste wird der Thread beendet, falls nicht schon geschehen, die Service-Prozesse terminiert und die Kafka-Topics wieder gelöscht.
+
+\subsection*{Probleme bei der Implementierung}
+Ich bin bei der Implementierung auf einige Hürden gestoßen, von denen ich hier ein paar nennen möchte.
+
+\begin{itemize}
+	\item Zunächst wurden die Einträge zeitversetzt in die Topics geschrieben, wodurch die Geschwindigkeit der Streitwagen erheblich litt. 
+	Hier war einige zusätzliche Konfiguration der Producer (insbesondere das Setzen des Parameters \texttt{linger.ms} auf \texttt{0}) notwendig, um die Latenzen in den Griff zu bekommen.
+	
+	\item Die Consumer waren zunächst auch nicht ganz korrekt konfiguriert, sodass sie nur die Nachrichten erhielten, die NACH ihrer Instantiierung geschrieben worden waren.
+	Insbesondere beim Observer im Admin-Tool führte das regelmäßig dazu, dass der Zieleinlauf der Streitwagen "verpasst" wurde.
+	Auch hier konnte ich das Problem durch ein paar Konfigurations-Optionen lösen.
+	
+	\item Das Jonglieren mit Prozessen in Java ist immer etwas lästig, vor allem wenn die Prozesse nicht korrekt beendet werden.
+	Es brauchte etwas Aufwand, bis ich eine relativ robuste Lösung gefunden habe, die eine Beendigung der Prozesse zu jeder Zeit möglich macht und mich nicht zu regelmäßigen Aufräummaßnahmen (\texttt{killall -9 java}) zwingt. (Lösung: Observer in separatem Thread statt im Main-Thread, sodass der Main-Thread weiter auf Eingaben lauschen kann.)
+	Außerdem habe ich zuerst das Ausmaß der Beispielstrecke viel zu groß gewählt, sodass mein Rechner beim Starten der vielen Prozesse eingefroren ist und ich einen Hard-Reset machen musste.
+	Wenn die Services aber auf vielen Rechnern verteilt laufen würden, wäre das kein Problem.
+	Theoretisch wären mit Kafka sogar mehrere Instanzen des selben Service möglich, auf die die eingehenden Messages verteilt werden.
+\end{itemize}
 
 \end{document}
