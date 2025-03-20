@@ -1,11 +1,15 @@
-package sa4e.portfolio3.common;
+package sa4e.portfolio3.cucuco;
 
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.Future;
 
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.NewTopic;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
 
 public class KafkaUtil {
     public static void createTopics(List<String> topics) {
@@ -31,6 +35,26 @@ public class KafkaUtil {
             System.out.println("Topics deleted successfully!");
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    public static void send(String topic, String key, String value) {
+        Properties props = new Properties();
+        props.put("bootstrap.servers", "localhost:9092");
+        props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+
+        KafkaProducer<String, String> producer = new KafkaProducer<>(props);
+        try {
+            ProducerRecord<String, String> record = new ProducerRecord<>(topic, key, value);
+            Future<RecordMetadata> future = producer.send(record);
+            RecordMetadata metadata = future.get();  // Synchronously wait for send to complete
+            System.out.printf("Sent record to topic %s partition %d with offset %d%n",
+                    metadata.topic(), metadata.partition(), metadata.offset());
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            producer.close();
         }
     }
 }

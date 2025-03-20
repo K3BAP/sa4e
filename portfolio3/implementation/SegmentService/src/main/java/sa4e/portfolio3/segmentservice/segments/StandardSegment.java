@@ -11,34 +11,13 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.Properties;
 import java.util.Random;
+import java.util.concurrent.ExecutionException;
 
 public class StandardSegment implements SegmentRoutine {
-    private KafkaConsumer<String, String> consumer;
-    private KafkaProducer<String, String> producer;
-    private Segment segmentData;
-    private Random rand = new Random();
-
-    public static SegmentRoutine create(Segment segment) {
-        StandardSegment s = new StandardSegment();
-
-        s.segmentData = segment;
-        Properties props = new Properties();
-        props.put("bootstrap.servers", "localhost:9092");
-        props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-        props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-        // Lower latency configurations
-        props.put("linger.ms", "0");
-        props.put("batch.size", "16384");
-        props.put("acks", "all");
-        props.put("retries", Integer.MAX_VALUE);
-
-
-        s.producer = new KafkaProducer<>(props);
-        s.consumer = new KafkaConsumer<>(props);
-        s.consumer.subscribe(Collections.singletonList(segment.getSegmentId()));
-
-        return s;
-    }
+    protected KafkaConsumer<String, String> consumer;
+    protected KafkaProducer<String, String> producer;
+    protected Segment segmentData;
+    protected Random rand = new Random();
 
     @Override
     public void mainLoop() throws RuntimeException {
@@ -46,22 +25,51 @@ public class StandardSegment implements SegmentRoutine {
             while (true) {
                 ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
                 for (ConsumerRecord<String, String> record : records) {
-                    String chariotJson = record.value();
-                    String nextSegment = segmentData.getNextSegments().get(
-                            rand.nextInt(segmentData.getNextSegments().size())
-                    );
-
-                    ProducerRecord<String, String> producerRecord = new ProducerRecord<>(
-                            nextSegment,
-                            record.key(),
-                            chariotJson
-                    );
-                    producer.send(producerRecord).get();
+                    handleRecord(record);
                 }
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    protected void handleRecord(ConsumerRecord<String, String> record) throws ExecutionException, InterruptedException {
+        String chariotJson = record.value();
+        String nextSegment = segmentData.getNextSegments().get(
+                rand.nextInt(segmentData.getNextSegments().size())
+        );
+
+        ProducerRecord<String, String> producerRecord = new ProducerRecord<>(
+                nextSegment,
+                record.key(),
+                chariotJson
+        );
+        producer.send(producerRecord).get();
+    }
+
+    @Override
+    public void init(Segment segment) {
+        segmentData = segment;
+        Properties producerProps = new Properties();
+        producerProps.put("bootstrap.servers", "localhost:9092");
+        producerProps.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        producerProps.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+
+        // Lower latency configurations
+        producerProps.put("linger.ms", "0");
+        producerProps.put("batch.size", "16384");
+        producerProps.put("acks", "all");
+        producerProps.put("retries", Integer.MAX_VALUE);
+
+        Properties consumerProps = new Properties();
+        consumerProps.put("bootstrap.servers", "localhost:9092");
+        consumerProps.put("group.id", segmentData.getSegmentId());
+        consumerProps.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        consumerProps.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+
+        producer = new KafkaProducer<>(producerProps);
+        consumer = new KafkaConsumer<>(consumerProps);
+        consumer.subscribe(Collections.singletonList(segment.getSegmentId()));
     }
 
     @Override

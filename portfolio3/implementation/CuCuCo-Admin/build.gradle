@@ -9,8 +9,15 @@ repositories {
 
 dependencies {
     implementation project(':common')
+    implementation 'org.apache.kafka:kafka-clients:4.0.0'
 }
 
 application {
     mainClass = 'sa4e.portfolio3.cucuco.Main'
 }
+
+tasks.named("run", JavaExec) {
+    dependsOn(':SegmentService:jar')
+    standardInput = System.in
+}
+
