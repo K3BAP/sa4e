@@ -6,11 +6,13 @@ import java.nio.file.Paths;
 import java.util.List;
 
 import sa4e.portfolio3.common.CourseDefinition;
+import sa4e.portfolio3.common.KafkaUtil;
 
 public class Main {
     public static void main(String[] args) throws Exception {
         if (args.length != 1) {
             System.err.println("Usage: java -jar portfolio3.jar <path_to_json>");
+            System.exit(1);
         }
 
         CourseDefinition course = loadCourseDefinition(args[0]);

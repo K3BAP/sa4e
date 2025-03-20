@@ -1,5 +1,7 @@
 package sa4e.portfolio3.common;
 
+import com.google.gson.Gson;
+
 import java.util.List;
 
 public class Segment {
@@ -24,5 +26,13 @@ public class Segment {
     }
     public void setNextSegments(List<String> nextSegments) {
         this.nextSegments = nextSegments;
+    }
+
+    public static Segment fromJson(String json) {
+        return new Gson().fromJson(json, Segment.class);
+    }
+
+    public String toJson() {
+        return new Gson().toJson(this);
     }
 }

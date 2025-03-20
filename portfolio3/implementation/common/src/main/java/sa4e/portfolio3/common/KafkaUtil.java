@@ -1,6 +1,5 @@
-package sa4e.portfolio3.cucuco;
+package sa4e.portfolio3.common;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
