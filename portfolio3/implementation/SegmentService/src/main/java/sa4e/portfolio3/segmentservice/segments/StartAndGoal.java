@@ -31,33 +31,29 @@ public class StartAndGoal extends StandardSegment{
         ProducerRecord<String, String> producerRecord = null;
         if (chariot.getRoundsPassed() >= rounds) {
             // Chariot has finished: Add timetable entry
+            System.out.println("Chariot finished: " + chariot.toJson());
             TimetableEntry entry = new TimetableEntry(TimetableEntry.TYPE_FINISHED, chariot.getChariotId(), System.currentTimeMillis());
             producerRecord = new ProducerRecord<>(
                     "timetable",
                     entry.toJson(),
                     entry.toJson()
-
             );
+            producer.send(producerRecord).get();
+            System.out.println("Finish sent to timetable");
         }
         else {
             // Chariot continues: act as normal segment
-            super.handleRecord(record);
+            sendToNextSegment(chariot.toJson());
         }
 
-        producer.send(producerRecord).get();
+
     }
 
     private void handleTimetableEntry(ConsumerRecord<String, String> record) throws ExecutionException, InterruptedException {
         TimetableEntry entry = TimetableEntry.fromJson(record.value());
         if (entry.getType().equals(TimetableEntry.TYPE_STARTED)) {
             Chariot chariot = new Chariot("chariot_" + segmentData.getSegmentId());
-            ProducerRecord<String, String> producerRecord = new ProducerRecord<>(
-                    segmentData.getSegmentId(),
-                    chariot.toJson(),
-                    chariot.toJson()
-            );
-
-            producer.send(producerRecord).get();
+            sendToNextSegment(chariot.toJson());
         }
     }
 

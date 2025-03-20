@@ -5,6 +5,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import sa4e.portfolio3.common.Chariot;
 import sa4e.portfolio3.common.Segment;
 
 import java.time.Duration;
@@ -35,13 +36,17 @@ public class StandardSegment implements SegmentRoutine {
 
     protected void handleRecord(ConsumerRecord<String, String> record) throws ExecutionException, InterruptedException {
         String chariotJson = record.value();
+        sendToNextSegment(chariotJson);
+        System.out.println(segmentData.getSegmentId() + ": Chariot passed: " + chariotJson);
+    }
+
+    protected void sendToNextSegment(String chariotJson) throws ExecutionException, InterruptedException {
         String nextSegment = segmentData.getNextSegments().get(
                 rand.nextInt(segmentData.getNextSegments().size())
         );
-
         ProducerRecord<String, String> producerRecord = new ProducerRecord<>(
                 nextSegment,
-                record.key(),
+                chariotJson,
                 chariotJson
         );
         producer.send(producerRecord).get();
@@ -66,6 +71,7 @@ public class StandardSegment implements SegmentRoutine {
         consumerProps.put("group.id", segmentData.getSegmentId());
         consumerProps.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         consumerProps.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        consumerProps.put("auto.offset.reset", "earliest");
 
         producer = new KafkaProducer<>(producerProps);
         consumer = new KafkaConsumer<>(consumerProps);

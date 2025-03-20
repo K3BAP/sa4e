@@ -44,6 +44,12 @@ public class KafkaUtil {
         props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
 
+        // Lower latency configurations
+        props.put("linger.ms", "0");
+        props.put("batch.size", "16384");
+        props.put("acks", "all");
+        props.put("retries", Integer.MAX_VALUE);
+
         KafkaProducer<String, String> producer = new KafkaProducer<>(props);
         try {
             ProducerRecord<String, String> record = new ProducerRecord<>(topic, key, value);

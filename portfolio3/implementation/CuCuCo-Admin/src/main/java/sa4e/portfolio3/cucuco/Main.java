@@ -15,6 +15,7 @@ import sa4e.portfolio3.common.Segment;
 import sa4e.portfolio3.common.TimetableEntry;
 
 public class Main {
+    private static List<Process> processes = new ArrayList<>();
     public static void main(String[] args) throws Exception {
         if (args.length != 1) {
             System.err.println("Usage: java -jar CuCuCo-Admin.jar <path_to_json>");
@@ -29,17 +30,22 @@ public class Main {
         System.out.println("Creating Kafka topics");
         createTopicsFromSegments(course);
         KafkaUtil.createTopics(List.of("timetable"));
-        List<Process> processes = new ArrayList<>();
 
         try {
             System.out.println("Starting processes");
             processes = createSegmentProcesses(course);
 
-            System.out.println("Press enter to start race");
+            System.out.println("Press enter to start race (For better results: wait until kafka finished processing the inputs)");
             scanner.nextLine();
 
             long startTimestamp = startRace();
-            monitorRace(startTimestamp, countChariots(course));
+            Thread monitorThread = new Thread(() -> monitorRace(startTimestamp, countChariots(course)));
+            monitorThread.start();
+
+            System.out.println("Press enter to stop race");
+            scanner.nextLine();
+            monitorThread.interrupt();
+            monitorThread.join();
 
         }
         catch (Exception e) {
@@ -48,7 +54,8 @@ public class Main {
         finally {
             System.out.println("Shutting down...");
             for (Process p : processes) {
-                p.destroy();
+                p.destroyForcibly().waitFor();
+                System.out.println(p + " destroyed: " + !p.isAlive());
             }
             deleteTopicsFromSegments(course);
             KafkaUtil.deleteTopics(List.of("timetable"));
@@ -70,7 +77,7 @@ public class Main {
 
     private static List<String> getAllSegmentIds(CourseDefinition course) {
         return getAllSegmentsStream(course)
-            .map(segment -> segment.getSegmentId())
+            .map(Segment::getSegmentId)
             .toList();
     }
 
@@ -92,8 +99,8 @@ public class Main {
                         );
 
                         // Redirect output to the parent process's stdout
-                        processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
-                        processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT); // Also inherit stderr
+                        //processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
+                        //processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT); // Also inherit stderr
 
                         // Start the process
                         return processBuilder.start();
@@ -124,24 +131,26 @@ public class Main {
         props.put("group.id", "admin-group");
         props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        props.put("auto.offset.reset", "earliest");
 
-        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props);
-        consumer.subscribe(Collections.singletonList("timetable"));
-
-        try {
+        try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props)) {
+            consumer.subscribe(Collections.singletonList("timetable"));
             while (chariotCount > 0) {
                 ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
                 for (ConsumerRecord<String, String> record : records) {
                     TimetableEntry entry = TimetableEntry.fromJson(record.value());
                     if (entry.getType().equals(TimetableEntry.TYPE_FINISHED)) {
                         System.out.println(entry.getChariotId() + " finished at time " + entry.getTimestamp()
-                        + "\nElapsed time " + (entry.getTimestamp() - startTimestamp));
+                                + "\nElapsed time " + (entry.getTimestamp() - startTimestamp) + "ms");
                         chariotCount--;
                     }
                 }
             }
-        } finally {
-            consumer.close();
         }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("Race is over. Press Enter to exit");
     }
 }
