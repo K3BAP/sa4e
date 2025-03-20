@@ -1,0 +1,46 @@
+services:
+  kafka0:
+    image: apache/kafka-native:4.0.0
+    container_name: kafka0
+    environment:
+      # Unique node identifier
+      KAFKA_NODE_ID: 1
+      # Run as both broker and controller
+      KAFKA_PROCESS_ROLES: broker,controller
+      # Specify the cluster quorum (note the hostnames must match service names)
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka0:9093,2@kafka1:9093,3@kafka2:9093"
+      # Define listeners: one for clients, one for internal controller communications
+      KAFKA_LISTENERS: "PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093"
+      # Advertise the PLAINTEXT listener so clients know how to connect
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://localhost:9092"
+      # Tell Kafka which listener is for controller communication
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+    ports:
+      - "9092:9092"
+
+  kafka1:
+    image: apache/kafka-native:4.0.0
+    container_name: kafka1
+    environment:
+      KAFKA_NODE_ID: 2
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka0:9093,2@kafka1:9093,3@kafka2:9093"
+      KAFKA_LISTENERS: "PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://localhost:9093"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+    ports:
+      - "9093:9092"
+
+  kafka2:
+    image: apache/kafka-native:4.0.0
+    container_name: kafka2
+    environment:
+      KAFKA_NODE_ID: 3
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka0:9093,2@kafka1:9093,3@kafka2:9093"
+      KAFKA_LISTENERS: "PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://localhost:9094"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+    ports:
+      - "9094:9092"
+

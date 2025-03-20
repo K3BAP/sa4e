@@ -141,6 +141,11 @@ Nun wird außerdem ein Observer-Thread gestartet, der das \texttt{timetable}-Top
 
 Nach einem weiteren Druck auf die Enter-Taste wird der Thread beendet, falls nicht schon geschehen, die Service-Prozesse terminiert und die Kafka-Topics wieder gelöscht.
 
+\subsection*{Zeitmessung}
+Für den finalen Test habe ich einen Kurs mit zwei Spuren und je 10 Segmenten erstellt. 
+Für diesen Kurs brauchten die Streitwagen jeweils etwa 500ms, wenn man vor Rennstart ein paar Sekunden wartet, bis Kafka das Erstellen der Topics vollständig verarbeitet hat. 
+Wartet man nicht, so dauert es auch schon mal 7000ms.
+
 \subsection*{Probleme bei der Implementierung}
 Ich bin bei der Implementierung auf einige Hürden gestoßen, von denen ich hier ein paar nennen möchte.
 
@@ -158,5 +163,10 @@ Ich bin bei der Implementierung auf einige Hürden gestoßen, von denen ich hier
 	Wenn die Services aber auf vielen Rechnern verteilt laufen würden, wäre das kein Problem.
 	Theoretisch wären mit Kafka sogar mehrere Instanzen des selben Service möglich, auf die die eingehenden Messages verteilt werden.
 \end{itemize}
+
+\section{Aufgabe 2 - Cluster}
+Ab Version 4.0 enthält Apache Kafka ein eigenes Framework für die Cluster-Koordination.
+Mithilfe einer Docker-Compose-Datei habe ich drei Instanzen von Kafka erstellt und untereinander koordiniert.
+Um das Potenzial voll auszuschöpfen, kann jetzt noch der Replikations- bzw. Partitions-Faktor der Topics erhöht werden.
 
 \end{document}
