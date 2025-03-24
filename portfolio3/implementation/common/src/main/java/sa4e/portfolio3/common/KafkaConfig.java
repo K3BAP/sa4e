@@ -3,9 +3,11 @@ package sa4e.portfolio3.common;
 import java.util.Properties;
 
 public class KafkaConfig {
+    private static final String bootstrapServers = "localhost:9092";
+
     public static Properties getProducerProps() {
         Properties producerProps = new Properties();
-        producerProps.put("bootstrap.servers", "localhost:9092");
+        producerProps.put("bootstrap.servers", bootstrapServers);
         producerProps.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         producerProps.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
 
@@ -20,7 +22,7 @@ public class KafkaConfig {
 
     public static Properties getConsumerProps(String groupId) {
         Properties consumerProps = new Properties();
-        consumerProps.put("bootstrap.servers", "localhost:9092");
+        consumerProps.put("bootstrap.servers", bootstrapServers);
         consumerProps.put("group.id", groupId);
         consumerProps.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         consumerProps.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
@@ -31,7 +33,7 @@ public class KafkaConfig {
 
     public static Properties getAdminProps() {
         Properties adminProps = new Properties();
-        adminProps.put("bootstrap.servers", "localhost:9092");
+        adminProps.put("bootstrap.servers", bootstrapServers);
 
         return adminProps;
     }

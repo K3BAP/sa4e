@@ -15,7 +15,7 @@ import sa4e.portfolio3.common.KafkaConfig;
 public class KafkaUtil {
     public static void createTopics(List<String> topics) {
         List<NewTopic> newTopics = topics.stream()
-            .map(topic -> new NewTopic(topic, 1, (short) 1))
+            .map(topic -> new NewTopic(topic, 4, (short) 2))
             .toList();
         try (AdminClient admin = AdminClient.create(KafkaConfig.getAdminProps())) {
             admin.createTopics(newTopics).all().get();
