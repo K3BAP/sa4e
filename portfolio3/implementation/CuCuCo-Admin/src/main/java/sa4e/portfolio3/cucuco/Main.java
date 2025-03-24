@@ -138,6 +138,12 @@ public class Main {
                                 + "\nElapsed time " + (entry.getTimestamp() - startTimestamp) + "ms");
                         chariotCount--;
                     }
+                    else if (entry.getType().equals(TimetableEntry.TYPE_FAILED)) {
+                        System.out.println(entry.getChariotId() + " failed to greet caesar. Finish time " + entry.getTimestamp()
+                                + "\nElapsed time " + (entry.getTimestamp() - startTimestamp) + "ms"
+                                + "\nThe lions shall decide on his fate.");
+                        chariotCount--;
+                    }
                 }
             }
         }

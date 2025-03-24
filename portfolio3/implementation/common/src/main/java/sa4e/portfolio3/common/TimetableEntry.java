@@ -7,6 +7,7 @@ public class TimetableEntry {
     private String chariotId;
     private long timestamp;
 
+    public static final String TYPE_FAILED = "failed";
     public static final String TYPE_FINISHED = "finished";
     public static final String TYPE_STARTED = "started";
 

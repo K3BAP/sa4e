@@ -1,9 +1,7 @@
 package sa4e.portfolio3.segmentservice;
 
 import sa4e.portfolio3.common.Segment;
-import sa4e.portfolio3.segmentservice.segments.SegmentRoutine;
-import sa4e.portfolio3.segmentservice.segments.StandardSegment;
-import sa4e.portfolio3.segmentservice.segments.StartAndGoal;
+import sa4e.portfolio3.segmentservice.segments.*;
 
 public class Main {
     public static void main(String[] args) {
@@ -22,6 +20,12 @@ public class Main {
                 break;
             case "start-goal":
                 routine = new StartAndGoal();
+                break;
+            case "bottleneck":
+                routine = new Bottleneck();
+                break;
+            case "caesar":
+                routine = new Caesar();
                 break;
             default:
                 System.out.println("Unknown segment type: " + segmentData.getType());

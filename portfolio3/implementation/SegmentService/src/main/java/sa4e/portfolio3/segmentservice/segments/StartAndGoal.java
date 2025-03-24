@@ -28,25 +28,30 @@ public class StartAndGoal extends StandardSegment{
         Chariot chariot = Chariot.fromJson(record.value());
         chariot.setRoundsPassed(chariot.getRoundsPassed() + 1);
 
-        ProducerRecord<String, String> producerRecord = null;
         if (chariot.getRoundsPassed() >= rounds) {
             // Chariot has finished: Add timetable entry
             System.out.println("Chariot finished: " + chariot.toJson());
-            TimetableEntry entry = new TimetableEntry(TimetableEntry.TYPE_FINISHED, chariot.getChariotId(), System.currentTimeMillis());
-            producerRecord = new ProducerRecord<>(
-                    "timetable",
-                    entry.toJson(),
-                    entry.toJson()
-            );
-            producer.send(producerRecord).get();
+            emitTimetableEntry(new TimetableEntry(TimetableEntry.TYPE_FINISHED, chariot.getChariotId(), System.currentTimeMillis()));
             System.out.println("Finish sent to timetable");
+        }
+        else if (chariot.getRoundsPassed() >= 2 && !chariot.getHasGreetedCaesar()) {
+            System.out.println("Chariot failed and will be thrown into the arena: " + chariot.toJson());
+            emitTimetableEntry(new TimetableEntry(TimetableEntry.TYPE_FAILED, chariot.getChariotId(), System.currentTimeMillis()));
+            System.out.println("Fail sent to timetable");
         }
         else {
             // Chariot continues: act as normal segment
             sendToNextSegment(chariot.toJson());
         }
+    }
 
-
+    private void emitTimetableEntry(TimetableEntry entry) throws ExecutionException, InterruptedException {
+        ProducerRecord<String, String> producerRecord = new ProducerRecord<>(
+                "timetable",
+                entry.toJson(),
+                entry.toJson()
+        );
+        producer.send(producerRecord).get();
     }
 
     private void handleTimetableEntry(ConsumerRecord<String, String> record) throws ExecutionException, InterruptedException {
