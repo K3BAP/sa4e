@@ -22,7 +22,8 @@ def generate_tracks(num_tracks: int, length_of_track: int):
             # Edge case: track length is 1 => no "normal" segments, loops onto itself
             next_segments = [start_segment_id]
         else:
-            next_segments = [f"segment-{t}-1"]
+            # Three possible next steps
+            next_segments = [f"segment-{t + u}-1" for u in range(-1, 2) if t + u > 0 and t + u <= num_tracks]
 
         start_segment = {
             "segmentId": start_segment_id,
@@ -36,9 +37,12 @@ def generate_tracks(num_tracks: int, length_of_track: int):
             seg_id = f"segment-{t}-{c}"
             # If this is the last normal segment, it loops back to 'start-and-goal-t'
             if c == length_of_track - 1:
-                next_segs = [start_segment_id]
+                next_segs = [f"start-and-goal-{t + u}" for u in range(-1, 2) if t + u > 0 and t + u <= num_tracks]
+                if t == 1:
+                    next_segs.append("caesar-1")
             else:
-                next_segs = [f"segment-{t}-{c+1}"]
+                # Three possible next steps
+                next_segs = [f"segment-{t + u}-{c+1}" for u in range(-1, 2) if t + u > 0 and t + u <= num_tracks]
 
             segment = {
                 "segmentId": seg_id,
@@ -53,6 +57,27 @@ def generate_tracks(num_tracks: int, length_of_track: int):
         }
         all_tracks.append(track_definition)
 
+    caesar_track = {
+        "trackId": "caesar",
+        "segments": [
+            {
+                "segmentId": "caesar-1",
+                "type": "bottleneck",
+                "nextSegments": ["caesar-2"]
+            },
+            {
+                "segmentId": "caesar-2",
+                "type": "caesar",
+                "nextSegments": ["caesar-3"]
+            },
+            {
+                "segmentId": "caesar-3",
+                "type": "bottleneck",
+                "nextSegments": [f"segment-1-1"]
+            }
+        ]
+    }
+    all_tracks.append(caesar_track)
     return {"tracks": all_tracks}
 
 
