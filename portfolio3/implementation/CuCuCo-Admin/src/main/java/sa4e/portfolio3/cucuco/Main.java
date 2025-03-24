@@ -11,6 +11,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import sa4e.portfolio3.common.CourseDefinition;
+import sa4e.portfolio3.common.KafkaConfig;
 import sa4e.portfolio3.common.Segment;
 import sa4e.portfolio3.common.TimetableEntry;
 
@@ -126,14 +127,7 @@ public class Main {
     }
 
     private static void monitorRace(Long startTimestamp, Long chariotCount) {
-        Properties props = new Properties();
-        props.put("bootstrap.servers", "localhost:9092");
-        props.put("group.id", "admin-group");
-        props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-        props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-        props.put("auto.offset.reset", "earliest");
-
-        try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props)) {
+        try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(KafkaConfig.getConsumerProps("admin"))) {
             consumer.subscribe(Collections.singletonList("timetable"));
             while (chariotCount > 0) {
                 ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
