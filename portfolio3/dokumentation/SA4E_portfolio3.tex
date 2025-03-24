@@ -68,10 +68,10 @@ Zuerst habe ich mir überlegt, wie ich das Spiel \emph{Ave Cäsar} auf eine Arch
 Dabei liegt es nahe, in Kafka zunächst für jedes Segment ein eigenes Topic anzulegen, für das dann im Folgenden verschiedene Producer und Consumer erstellt werden können.
 
 Die Streitwagen werden dann jeweils durch eine Message repräsentiert, optimalerweise in Form eines JSON-Strings um Statusinformationen zu transportieren.
- 
 
 Jedes Segment wird dann von einem eigenen Microservice repräsentiert, der jeweils als Consumer auf dem ihm zugeordneten Kafka Topic agiert.
 So werden ankommende Streitwagen vom Service gefunden und können an das jeweils nächste Segment (bzw. eines der möglichen nächsten Segmente) durch einen Producer weitergeleitet werden, wo bereits der nächste Segment-Service bereitsteht.
+Eine Mechanik wie das Ziehen und Ausspielen von Karten wird nicht implementiert, da die Geschwindigkeit der Streitwagen hier allein von der Latenz der Weitergabe abhängt - Ein rundenbasiertes Spiel halte ich hier für wenig sinnvoll.
 
 Für das Management des Systems muss außerdem ein zentrales Verwaltungsprogramm geschrieben werden, das den Streckenverlauf aus dem zuvor generierten JSON einliest und dann folgende Schritte unternimmt:
 
@@ -164,9 +164,36 @@ Ich bin bei der Implementierung auf einige Hürden gestoßen, von denen ich hier
 	Theoretisch wären mit Kafka sogar mehrere Instanzen des selben Service möglich, auf die die eingehenden Messages verteilt werden.
 \end{itemize}
 
-\section{Aufgabe 2 - Cluster}
+\section*{Aufgabe 2 - Cluster}
 Ab Version 4.0 enthält Apache Kafka ein eigenes Framework für die Cluster-Koordination.
 Mithilfe einer Docker-Compose-Datei habe ich drei Instanzen von Kafka erstellt und untereinander koordiniert.
-Um das Potenzial voll auszuschöpfen, kann jetzt noch der Replikations- bzw. Partitions-Faktor der Topics erhöht werden.
+Um das Cluster zu nutzen, sind innerhalb des Codes theoretisch keine weiteren Änderungen nötig.
+Für optimale Redundanz übergebe ich beim Erstellen der Kafka-Clients eine Liste von Kafka-Knoten, damit beim Ausfall eines Knotens auf die anderen ausgewichen werden kann.
+Um das Potenzial voll auszuschöpfen, habe ich zusätzlich noch den Replikations- bzw. Partitions-Faktor der Topics erhöht, um die verteilte Architektur optimal zu nutzen.
+
+Aufgrund spärlicher Dokumentation war das erstellen einer funktionierenden Compose-File gar nicht so leicht, und auch ChatGPT lieferte zunächst keine funktionierenden Lösungen, sondern eher Ansatzpunkte.
+Letztendlich konnte ich mit einer Kombination von KI und eigener Recherche das Cluster aber zum Laufen bringen.
+
+\section*{Aufgabe 3 - Erweiterte Spielregeln}
+Als Erweiterung zur Basisversion des Spiels habe ich zwei neue Segmenttypen erstellt, die beide auf dem Standard-Segment aufbauen und kleine Änderungen mitbringen:
+\begin{itemize}
+	\item \texttt{Bottleneck} wartet eine zufällige Zeit zwischen 100 und 500 Millisekunden, bevor der Streitwagen weitergeschickt wird.
+	\item \texttt{Caesar} setzt beim Streitwagen im Vorüberfahren eine Variable \texttt{hasGreetedCaesar} auf \texttt{True}
+\end{itemize}
+
+Dank der geerbten Eigenschaften der \texttt{StandardSegment}-Klasse sind hier nur minimale Änderungen nötig gewesen.
+
+In der \texttt{StartAndGoal}-Implementierung habe ich einen Check eingebaut, ob der Wagen nach Absolvieren der zweiten Runde Cäsar gegrüßt hat. Falls nicht, wird sein Versagen in das Timetable-Topic geschrieben und letztendlich vom Admin-Client ausgegeben.
+
+\subsection*{Geänderter Rundkurs}
+Das Skript zur Generierung der Rennstrecke habe ich so geändert, dass parallel zu den Start-Ziel-Segmenten Cäsar sitzt, in einer Spur aus Bottleneck-Segmenten, um es etwas spannender zu machen.
+Außerdem sind die Bahnen nicht mehr fest, sondern die Wagen können jederzeit auf eine benachbarte Bahn wechseln.
+So sind sie dann überhaupt erst in der Lage, Cäsar zu erreichen.
+
+\subsection*{Beobachtung}
+Da die Wagen in meiner Implementierung bisher nur durch den Zufall von einer Bahn auf eine andere steuern, ist es recht unwahrscheinlich, dass die Wagen im Laufe des Rennens in die Kaisergasse einfahren.
+Ich musste das Experiment einige Male starten, bevor dies überhaupt einmal geschieht.
+Naja, die Gladiatoren in der Arena müssen ja auch irgendwo herkommen.
+
 
 \end{document}
